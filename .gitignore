@@ -1,0 +1,13 @@
+# Ignore every top-level game project directory (each has its own independent git repo).
+/*/
+
+# Un-ignore the shared, cross-project documentation.
+!/docs/
+
+# Un-ignore the shared, cross-project reusable repositories.
+!/mechanic-repository/
+!/scene-repository/
+!/asset-repository/
+!/global-index/
+!/godot-4-snippets-bible/
+!/model-generation/

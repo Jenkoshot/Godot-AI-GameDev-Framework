@@ -1,0 +1,3 @@
+[submodule "docs/tools/godot-mcp"]
+	path = docs/tools/godot-mcp
+	url = https://github.com/tugcantopaloglu/godot-mcp.git

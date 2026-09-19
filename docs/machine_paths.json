@@ -1,0 +1,33 @@
+{
+  "_comment": "Per-machine Godot/Node executable paths. Keyed by hostname ($env:COMPUTERNAME on Windows, `hostname` on macOS/Linux). Read by CLAUDE.md Step 0 (session-start MCP health check) to resolve GODOT_PATH/node without relying on OS PATH or auto-detection, which misses non-standard install locations like Steam library folders. Safe to commit: these are local filesystem paths, not secrets.",
+  "machines": {
+    "AVERYS_WINDOWS": {
+      "label": "Jenko's laptop",
+      "os": "windows",
+      "godot_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Godot Engine\\godot.windows.opt.tools.64.exe",
+      "godot_version": "4.7.1",
+      "godot_source": "steam",
+      "node_path": "C:\\Program Files\\nodejs\\node.exe",
+      "last_verified": "2026-08-03"
+    },
+    "CAMERON": {
+      "label": "TODO - developer has not named this machine yet (added 2026-08-10)",
+      "os": "windows",
+      "godot_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Godot Engine\\godot.windows.opt.tools.64.exe",
+      "godot_version": "4.7.1",
+      "godot_source": "steam",
+      "node_path": "C:\\Program Files\\nodejs\\node.exe",
+      "last_verified": "2026-08-10"
+    },
+    "AVERYLAPTOP": {
+      "label": "Averylaptop",
+      "os": "windows",
+      "godot_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Godot Engine\\godot.windows.opt.tools.64.exe",
+      "godot_version": "4.7.2",
+      "godot_source": "steam",
+      "node_path": "C:\\Program Files\\nodejs\\node.exe",
+      "node_version": "24.19.0",
+      "last_verified": "2026-09-19"
+    }
+  }
+}

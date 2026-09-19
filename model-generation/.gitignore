@@ -1,0 +1,5 @@
+*
+!.gitignore
+!GEMINI.md
+!.agents/
+!.agents/**
