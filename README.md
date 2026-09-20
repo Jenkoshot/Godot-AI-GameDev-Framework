@@ -1,4 +1,4 @@
-﻿# Godot AI GameDev Framework
+# Godot AI GameDev Framework
 
 Welcome to the **Godot AI GameDev Framework**. This repository is a scalable, tiered architecture designed to solve the biggest bottlenecks in AI-assisted game development: context window bloat, Godot scene corruption, and code duplication. 
 
@@ -82,10 +82,32 @@ The AI will carefully untangle the code from your specific game, make it project
 
 ---
 
-## ⚖️ Customizing The Tiers & Behavior
+## ⚖️ The Scale Tiers: Choosing Your Architecture
 
-This framework scales with you. Projects are divided into **Lite**, **Standard**, and **Heavy** tiers. A game jam game (Lite) has almost no bureaucracy. A massive RPG (Heavy) has strict per-system documentation and architectural logging.
+Not every game needs the same level of AI bureaucracy. If you force an AI to read 20 architectural documents for a Flappy Bird clone, you waste tokens. If you don't use enough documentation for a massive RPG, the AI will hallucinate. 
 
-If you ever need to scale up a game, just tell the AI: *"Run the UPGRADE-TIER playbook."*
+When you create a project, the AI will ask you which tier to use:
+
+### 🟢 Lite Tier
+* **Why choose it:** Game jams, weekend prototypes, and highly experimental ideas.
+* **What it has:** Zero folder clutter. State is tracked in just three files located directly at the root of your game: `project_state.md`, `bugs.md`, and `tweak_guide.md`.
+* **How it works:** The AI reads those three files instantly, giving it lightning-fast context on your game without navigating directories.
+
+### 🟡 Standard Tier
+* **Why choose it:** Most indie games, months-long projects, and standard scoped ideas.
+* **What it has:** Cleans up the root directory by moving documentation into dedicated `project-state/` and `bugs/` folders. It introduces the `blueprints/` directory.
+* **How it works:** The Architect AI drafts detailed Markdown blueprints in the blueprints folder. The Executor AI reads that blueprint and executes it, keeping planning and coding completely separated for higher quality code.
+
+### 🔴 Heavy Tier
+* **Why choose it:** Massive RPGs, complex strategy games, multi-year projects, or games with multiple human developers.
+* **What it has:** Granular, per-system tracking. Instead of one master state file, documentation is split into discrete folders (e.g., `project-state/combat/`, `project-state/inventory/`). It also enforces `architecture_decisions.md` (ADRs) and `session_log.md` tracking.
+* **How it works:** Completely eliminates context-window bloat. If the AI is working on the inventory, it is strictly forbidden from reading the combat documentation. It ensures the AI only loads the exact context it needs for the task at hand.
+
+*Note: You are never locked in. If your Lite game jam project turns into a commercial product, just ask your AI to "Run the UPGRADE-TIER playbook" and it will automatically restructure your files into a Standard or Heavy tier without losing any data.*
+
+---
+
+## 🔧 Customizing AI Behavior
 
 If the AI makes a mistake that annoys you, **do not correct it in chat**. Open `docs/templates/common/EXECUTOR.md`, add a rule saying *"Never do X again"*, and run the sync script. Your AI will instantly learn that lesson for every game you ever build. Happy devving!
+
