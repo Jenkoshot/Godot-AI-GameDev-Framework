@@ -11,6 +11,17 @@ This framework comes pre-packaged with powerful tools that allow AI to build gam
 2. **Procedural 3D Modelkit (`antics.gg`):** An integrated Node.js library (`model-generation/`) that allows the AI to generate and modify 3D `.glb` assets purely through code parameters, saving you from opening Blender.
 3. **Global Harvesting:** Shared `assets/`, `scenes/`, and `mechanics/` folders where the AI can extract and store generic code (like a dialogue system) to instantly reuse in your future games.
 
+
+---
+
+## 🖥️ Compatibility & Tested Environments
+
+While the markdown templates technically allow you to use any AI, this framework has been rigorously tested against specific configurations:
+- **Tested AI Agents:** ChatGPT Codex, Claude Code, and Antigravity (Gemini).
+- **Primary Environment:** Fully tested using the Desktop App versions of these AIs on **Windows**.
+- **CLI Environments:** It should work perfectly with terminal/CLI versions of these AIs on Windows as well, provided your Node/Python environment variables are set up correctly.
+- **Linux/macOS:** Currently **untested**. Because the framework relies on standard Python and Node.js scripts, it should be natively compatible, but certain pathing logic (like pointing to the Godot executable in machine_paths.json) will require your own manual configuration.
+
 ---
 
 ## ⚡ 1. Initial Installation
