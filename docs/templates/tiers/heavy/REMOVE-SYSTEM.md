@@ -3,8 +3,8 @@
 An on-demand playbook for retiring an entire mechanic/system from a project — deciding "we're
 done with this system, take it out," not a bug fix (which patches) or a rename/move (see
 `markdowns4AI/ORGANIZE.md`). Invocable two ways: standalone, any time the user asks to remove or retire a
-system; or as a queued task when Gemini/Antigravity scopes a task as a removal rather than a
-build/fix (see `GEMINI.md` Phase 4).
+system; or as a queued task when the Architect Agent scopes a task as a removal rather than a
+build/fix (see `ARCHITECT.md` Phase 4).
 
 ## Process
 
@@ -22,8 +22,8 @@ build/fix (see `GEMINI.md` Phase 4).
    mirrors `markdowns4AI/ORGANIZE.md`'s approval gate, scaled up for a harder-to-reverse action.
 3. **Archive, never destroy.** Once approved:
    - Move the system's scripts/scenes to `project-state/archived_systems/[system]/[timestamp]/`
-     (timestamp in `YYYY-MM-DD_HHMMSS` format) via Godot MCP file operations — never raw shell
-     `mv`/`rm`, per `CLAUDE.md` workflow item 7. Git history already preserves everything, but a
+     (timestamp in `YYYY-MM-DD_HHMMSS` format) via Godot MCP file operations (`rename_file` to relocate within the project; `read_file` + `write_file` + `delete_file` if a true move is needed) — never raw shell
+     `mv`/`rm`, per `EXECUTOR.md`'s resource-operation rule. Git history already preserves everything, but a
      local archive folder makes "what did this used to look like" discoverable without digging
      through `git log`.
    - Move `project-state/[system]/[system].md`, `bugs/[system]/[system].md`, and the system's
@@ -38,6 +38,6 @@ build/fix (see `GEMINI.md` Phase 4).
    `SETUP.md` Step 3b) rather than starting from scratch. This is best-effort, not a guarantee —
    if other systems evolved significantly since removal, the reinstated system may need real
    rework to integrate cleanly again, not just a copy-back.
-5. **Documentation consistency, same as any task.** Same as `CLAUDE.md` step 9: update
+5. **Documentation consistency, same as any task.** Same as `EXECUTOR.md`'s task-completion step: update
    `_overview.md`, `bugs/_overview.md`, the project root `README.md`, and any `design_docs/*.md`
    that documented the now-removed system.

@@ -2,7 +2,7 @@
 
 This document contains the non-negotiable design pillars, art style constraints, and architectural rules for this specific game project.
 
-AI Agents (`GEMINI.md` and `CLAUDE.md`) MUST read this file before scoping, planning, or executing any logic to ensure all generated code and assets align with the project's unique "taste".
+AI agents (`ARCHITECT.md` and `EXECUTOR.md`) MUST read this file before scoping, planning, or executing any logic to ensure all generated code and assets align with the project's unique "taste".
 
 ## Design Pillars
 (e.g., "Combat is turn-based, no real-time action", "The game is relaxing, no punishment mechanics")

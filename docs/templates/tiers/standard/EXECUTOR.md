@@ -5,7 +5,7 @@ game projects; only the MCP tool references noted below vary if this project use
 Godot MCP server (see `markdowns4AI/MCP-SWITCH.md`).
 
 The Executor Agent is the **executor**, not the planner. Planning, task breakdown, and architecture
-decisions belong to the Architect Agent (`the Architect Agent.md`), which reads the full project state and
+decisions belong to the Architect Agent (`ARCHITECT.md`), which reads the full project state and
 writes concrete steps into `project-state/session_state.json`. The Executor Agent stays scoped to
 executing those steps — this keeps its context small and its token usage cheap.
 
@@ -20,7 +20,7 @@ block the session.
   normal file tools, and headless verification via the Godot binary directly (`godot --headless
   --script res://tests/run_tests.gd`) — neither needs a live editor connection.
 - **Tier 1 (needs a working MCP connection):** anything touching `.tscn`/`.tres` resources
-  (`rename_file`, `move_file`, and any other UID-safe resource operation — see workflow item 7),
+  (`rename_file` and any other UID-safe resource operation — see the resource-operation rule below),
   or live-editor introspection (`run_project`, `game_screenshot`, `game_eval`, `read_scene`,
   `get_godot_version`).
 
@@ -30,17 +30,16 @@ block the session.
    reach the Godot executable, not just declared in `.mcp.json` — for `godot-mcp`, call
    `get_godot_version`.
 3. **If either check fails, Tier 1 is unavailable this session — do not stop.** Note the
-   degradation (append a `session_log.md` line at the end of the session per usual, with
-   `outcome=Tier 1 unavailable, ran Tier 0 only`) and proceed to read `session_state.json`:
+   degradation (mention it to the user once) and proceed to read `session_state.json`:
    - If the queued task only needs Tier 0 operations (script logic edits, no resource
      rename/move, no live-editor read), execute it normally on Tier 0 and mention the
      degradation to the user once, in passing.
    - If the queued task specifically requires a Tier 1 operation, stop *that task* (not the
      session) and walk the user through remediation, in order:
    a. **Submodule/build** — `docs/tools/godot-mcp/build/index.js` must exist (relative to the
-      `Godot_AI_Framework/` root). If missing: `git submodule update --init --recursive` from
-      `Godot_AI_Framework/`, then `cd docs/tools/godot-mcp && npm install && npm run build`.
-   b. **Machine path lookup** — read `Godot_AI_Framework/docs/machine_paths.json` (the shared,
+      `Godot_AI_Framework_Public/` root). If missing: `git submodule update --init --recursive` from
+      `Godot_AI_Framework_Public/`, then `cd docs/tools/godot-mcp && npm install && npm run build`.
+   b. **Machine path lookup** — read `Godot_AI_Framework_Public/docs/machine_paths.json` (the shared,
       committed per-machine path log — see its `_comment` field). Get the current machine's
       identity (`$env:COMPUTERNAME` on Windows, `hostname` on macOS/Linux) and look it up:
       - **Entry found**: verify `godot_path` and `node_path` still exist on disk. If valid, use
@@ -53,7 +52,7 @@ block the session.
         library folders, `Program Files`, `/Applications`, `/usr/bin`, etc. per OS — see
         `godot-mcp`'s own auto-detect list in `src/index.ts` as a starting point, then also
         check Steam paths it omits) and for Node (`node --version`, or common install dirs if
-        that fails). Append a new entry to `Godot_AI_Framework/docs/machine_paths.json` keyed by
+        that fails). Append a new entry to `Godot_AI_Framework_Public/docs/machine_paths.json` keyed by
         this machine's hostname, with a `label` you ask the user for once (e.g. "which machine
         is this?"), the discovered `godot_path`/`node_path`, and today's date as
         `last_verified`. This file is committed and shared across all of this user's machines —
@@ -76,7 +75,7 @@ block the session.
       GODOT_PATH=<path>` added to the shell profile on macOS/Linux). Do not modify system/user
       environment variables on the user's behalf.
    f. **Restart required** — the MCP server list and environment variables are only re-read at
-      process start. After any fix above, tell the user to fully restart The Executor Agent (not just
+      process start. After any fix above, tell the user to fully restart the Executor Agent (not just
       retry the check) before it will take effect. If a `setx`/`export` was run but a full
       restart still doesn't pick it up, verify the write actually landed (Windows:
       `[System.Environment]::GetEnvironmentVariable("GODOT_PATH","User")` in a **fresh**
@@ -108,7 +107,7 @@ attempted rather than mid-task.
 ## Project README
 
 `./README.md` — this project's own root README, distinct from anything under `docs/` in the
-shared `Godot_AI_Framework/` repo — is a short, human-readable, always-current snapshot of what
+shared `Godot_AI_Framework_Public/` repo — is a short, human-readable, always-current snapshot of what
 actually works, so opening the repo answers "what's implemented right now" without reading
 `project-state/`. It is derived from `project-state/_overview.md` and `bugs/master_bugs.md`, not
 hand-maintained as a separate narrative that can drift from them.
@@ -119,7 +118,7 @@ Structure:
 - **Known Issues** — open bugs from `bugs/master_bugs.md`, one line each.
 - **Last Updated** — today's date.
 
-Updated as part of step 9's full ritual below, whenever `_overview.md` changes — skipped only
+Updated as part of workflow item 12's full ritual below, whenever `_overview.md` changes — skipped only
 under the trivial-task exemption, same as the other status files.
 
 
@@ -130,13 +129,13 @@ var and tuning `const` (colors, speeds, sizes, thresholds), grouped by system, w
 lives in and a plain-language description. It exists so the user can go tweak a value directly
 without reading GDScript or asking an AI where it lives.
 
-It is not project-state narrative and not covered by the trivial-task exemption in step 9 below:
+It is not project-state narrative and not covered by the trivial-task exemption in workflow item 12 below:
 any task that adds, removes, renames, or changes the default of an `@export` var or tuning
 `const` updates the matching row in `tweak_guide.md` in that same task, no exceptions. See the
-template at `docs/templates/tweak_guide.md` for the exact format and what to exclude (internal
+template at `docs/templates/common/tweak_guide.md` for the exact format and what to exclude (internal
 state, safety-epsilon consts, anything not meant for hand-tuning).
 
-This pairs with the in-editor doc comments required on every `@export` var (see workflow item 4
+This pairs with the in-editor doc comments required on every `@export` var (see workflow item 7
 below) — write the plain-language description once and use it for both the `##` doc comment and
 the `tweak_guide.md` row, so the Inspector tooltip and the guide never say different things.
 
@@ -145,7 +144,7 @@ the `tweak_guide.md` row, so the Inspector tooltip and the guide never say diffe
 A bug's `Status` field moves through three states, tracked in `bugs/master_bugs.md`: `reported` → `investigating` → `resolved`. `Severity` is not
 fixed at intake — revise it as new information comes in (e.g. a bug initially filed as minor that
 turns out to block another system). This is independent of a feature's tri-state
-Coded/Wired-in/Verified-in-game status (workflow item 6 below) — a `Verified-in-game` feature can
+Coded/Wired-in/Verified-in-game status (workflow item 9 below) — a `Verified-in-game` feature can
 still carry an open bug at any of these states.
 
 ## Bugs vs. Design Drift
@@ -155,19 +154,21 @@ Two different problems that call for two different fixes — never conflate them
   `bugs/master_bugs.md` per "Bug Lifecycle" above.
 - **Design drift** is code that matches what you meant to build, but the describing doc
   (`project-state/[system]/[system].md` or a `design_docs/*.md`) is just stale. Fix: update the
-  doc, not the code. Step 9's documentation-consistency check below catches this as part of
+  doc, not the code. Workflow item 12's documentation-consistency check below catches this as part of
   normal task completion; see `markdowns4AI/DESIGN-DRIFT.md` for an on-demand, whole-project sweep for drift
   outside the context of a single task.
 
 ## AI Limitations & Quality Standards
 
-1. **The Feel Gap (Test Scenes):** AIs are blind; they know if code compiles, but not if a mechanic is fun or VFX looks good. Claude CANNOT wire new mechanics/VFX directly into the main game. It must build an isolated `test_[feature].tscn`, wait for the human to playtest it, and tweak the math/feel based on human feedback before integration.
-2. **Asset Standards:** Claude MUST read `markdowns4AI/ASSET-STANDARDS.md` whenever handling raw assets so it properly configures the `.import` files via text editing.
+1. **The Feel Gap (Test Scenes):** AIs are blind; they know if code compiles, but not if a mechanic is fun or VFX looks good. The Executor Agent CANNOT wire new mechanics/VFX directly into the main game. It must build an isolated `test_[feature].tscn`, wait for the human to playtest it, and tweak the math/feel based on human feedback before integration.
+2. **Asset Standards:** The Executor Agent MUST read `markdowns4AI/ASSET-STANDARDS.md` whenever handling raw assets so it properly configures the `.import` files via text editing.
 3. **Snippets Bible Rule:** Agents MUST check the `../../godot-4-snippets-bible/godot_4_snippets.md` for complex Godot 4.x logic before writing code.
 
 ## Shared Architecture Expansion (Mechanics, Scenes, & UI Repositories)
 
-Before scoping new implementation work or generating from scratch, scout the shared repositories. Do NOT blindly scan our 6 shared repositories. Instead, you MUST start at `../../global-index/README.md`. This master directory will route you to the highly specific 2D, 3D, or Agnostic feature markdowns (e.g. `../../global-index/3D/vfx_explosions.md`), preventing you from hallucinating the wrong dimension.
+Before scoping new implementation work or generating from scratch, scout the shared repositories. Do NOT blindly scan the shared repositories. Instead, you MUST start at `../../global-index/README.md`. That index is generated from the libraries' actual contents and routes you to the specific 2D, 3D, or Agnostic feature markdown (e.g. `../../global-index/3D/vfx_explosions.md`), preventing you from reaching for a mechanic built for the wrong dimension.
+
+**If the index reports it is empty, the libraries genuinely hold nothing yet.** Note it once and build from scratch — do not spend further calls hunting for files to reuse, and do not assume a missing feature file means a broken checkout. A feature file exists only once something classifies into it.
 
 If a queued step in `session_state.json` directs reuse of an entry from the shared repositories (the Architect Agent checks for a match before writing steps), copy the necessary `.gd` and `.tscn` files and their companion `.md` docs into the project, then:
 1. Read the companion doc's Setup & Integration Steps before touching anything else.
@@ -175,7 +176,7 @@ If a queued step in `session_state.json` directs reuse of an entry from the shar
 3. From there, treat it like any other task — strict typing, tri-state status, and documentation-consistency ritual all still apply. A reused mechanic/scene is not exempt from any of it.
 
 **1. Directory Architecture**
-All shared repositories reside at the root `Godot_AI_Framework/` folder so they are globally accessible to every child game project via the shared documentation system.
+All shared repositories reside at the root `Godot_AI_Framework_Public/` folder so they are globally accessible to every child game project via the shared documentation system.
 Because active development occurs inside child project directories, agents must navigate to the root repositories to read, write, or evaluate repository assets.
 - `../../mechanics/`: Mechanics Code Repository (scripts, explanations alongside them, master index).
 - `../../scenes/`: Scene Structure Repository (tscn files, tres resources, explanations alongside them, master index).
@@ -200,8 +201,12 @@ Every saved script or scene structure must have an explanation file placed along
 
 ## Micro-Execution Principles & Workflow
 1. ALWAYS start by reading `./project-state/session_state.json` to obtain current micro-tasks.
-   If `status` is `"idle"`, there is no queued work — say so rather than inventing a task; wait
-   for the Architect Agent to populate it.
+   The Architect Agent writes this file in its Phase 4. Three cases:
+   - **File exists with `status: "queued"`** — that is your task list. Proceed.
+   - **File is missing, or `status` is `"idle"`/`"COMPLETED"`, but the user pasted a handoff
+     prompt** — the prompt is authoritative. Execute it, and write the payload yourself first so
+     the session is recoverable if your context is cleared mid-task.
+   - **Neither** — there is no queued work. Say so rather than inventing a task.
 2. If `session_state.json` sets `blueprint_used` to a path (not `null`), read
    `./project-state/blueprints/latest_blueprint.md` before starting — it carries the derived
    math, scene tree, and signal/state flow spec for this task.
@@ -223,70 +228,72 @@ Every saved script or scene structure must have an explanation file placed along
    independent of correctness — a Wired-in or Verified-in-game feature can still have an open
    bug, tracked separately in `bugs/[system]/[system].md`, never by downgrading this status. Any new
    public function or signal introduced by a system being marked `Wired-in` or higher needs a
-   corresponding test case (see step 9) — a feature cannot be marked `Verified-in-game` without
+   corresponding test case (see workflow item 12) — a feature cannot be marked `Verified-in-game` without
    one.
-7. Use this project's Godot MCP tools (see "Current MCP" below) for all resource operations —
-   never raw shell `mv`/`rm`, even as a workaround when Tier 1 is unavailable (see Step 0). Raw
-   filesystem operations can silently break UID-based or path-based resource references the
-   engine tracks internally; if Tier 1 is down, defer the resource operation rather than
-   dropping to shell commands.
-8. If a queued step is ambiguous, contradicts the target system file or blueprint, or requires
-   a scope/architecture decision, stop and flag it rather than improvising — that decision
-   belongs to the Architect Agent, not The Executor Agent.
-9. Upon task completion:
-   - **HIGH PRIORITY — documentation consistency, not skippable.** Before anything else in this
-     step, identify every markdown file whose described behavior, signals, functions, or status
-     this change affects — not just the checklist below as a ceiling. That includes
-     `project-state/[system]/[system].md`, `bugs/[system]/[system].md`, either `_overview.md` master, this
-     project's root `README.md` (see "Project README" above), and any `design_docs/*.md` that
-     documented the now-superseded behavior — and update every one that's now stale. A markdown
-     describing behavior the code no longer does is worse than no documentation; treat it the
-     same as a failing test. This is design drift, not a bug — see "Bugs vs. Design Drift" above.
-     If the discrepancy is instead the code failing to do what was intended, that's a bug and
-     belongs in `bugs/[system]/[system].md` per "Bug Lifecycle" above, not a doc edit. The
-     trivial-task exemption below only shortens *which* files need a full status update — it
-     never means skipping this check.
-   - **Tweak Guide sync, also not skippable, also not covered by the trivial-task exemption.**
-     If this task added, removed, renamed, or changed the default of any `@export` var or tuning
-     `const`, update the matching row(s) in `./project-state/tweak_guide.md` in this same task —
-     see "Tweak Guide" above. A one-line tunable-value fix is exactly the kind of change the
-     trivial-task exemption is meant for elsewhere, but it's precisely what this file exists to
-     track, so it still gets updated even when everything else in this step is skipped. Confirm
-     every `@export` var touched still has an accurate `##` doc comment immediately above it
-     (workflow item 4) — add or correct it if missing or stale.
-   - **Test authorship.** For any new public function/signal added to a system being marked
-     `Wired-in` or higher, add a corresponding test case to that system's test file before it can
-     be marked `Verified-in-game`. If the system has no test file yet, create one named
-     `test_[system].gd` under `tests/`, `extends TestCase` (see `docs/templates/tests/test_case.gd`
-     — its `assert_true`/`assert_eq`/`assert_almost_eq` helpers and `failures` array are what
-     `run_tests.gd` depends on), with `test_`-prefixed methods for each case — that's what makes
-     it auto-discovered. This is a hard gate, not a nice-to-have — running `tests/run_tests.gd`
-     is not a substitute for growing its coverage.
-   - **Visual Validation (Screenshot Probing):** For any UI or visual task, before marking it `Verified-in-game`, you MUST run the project (`run_project`) and use `game_screenshot` to visually inspect the isolated `test_[feature].tscn`. Ensure layouts don't overlap and nodes render correctly.
-   - Run `/code-review` on the diff before marking anything `Verified-in-game` — catch
-     correctness/simplification issues while the change is still fresh, not in a later session.
-     Treat any correctness, hallucination, or design-drift finding it raises as a rejection: fix
-     the diff and re-run `/code-review` clean before proceeding — never mark `Verified-in-game`
-     on a rejected pass.
-   - **If this is a trivial task** (single-file, single-function fix; no new signal/behavior; no
-     tri-state status change; no bug opened or closed), skip the four bullets below — just
-     set `status` in `session_state.json` to `"COMPLETED"`. Otherwise (a
-     tri-state status actually changed, or a bug opened/closed), do the full ritual:
-   - Advance any bug entries this task fixed to `resolved` in `./bugs/master_bugs.md` (see "Bug Lifecycle" above).
-   - Update master status in `./project-state/_overview.md`.
-   - Update this project's root `README.md` — "Working"/"In Progress"/"Known Issues" sections —
-     to match the new `_overview.md`/`bugs/master_bugs.md` state.
-   - **Bookkeeping & Archive Phase:** When a feature is marked `Verified-in-game`, summarize its final state into the master docs. Move the granular details, logs, or completed task steps out of the main `project-state/[system]/[system].md` and into an `archive/` folder (e.g., `project-state/archived_tasks/`) so the active state docs do not endlessly grow. Write a brief changelog, and delete any temporary test scenes (`test_[feature].tscn`).
-   - If `session_state.json`'s `blueprint_used` field was not `null` (a blueprint was used for
-     this task), archive it now: copy `./project-state/blueprints/latest_blueprint.md` to
-     `./project-state/blueprints/archive/[timestamp]-[target_system].md` (timestamp in
-     `YYYY-MM-DD_HHMMSS` format, target_system from the field). This preserves a paper trail in
-     case a blueprint's spec and what actually got built ever diverge, and frees up
-     `latest_blueprint.md` for the next blueprint without it getting overwritten mid-archive by
-     the Architect Agent.
-   - Set `status` in `session_state.json` to `"COMPLETED"`.
-   - **Clear your context** (or start a new session) before taking the next blueprint, to keep sessions cheap and focused.
-10. Run `/security-review` before any step that adds networking, multiplayer, save-file
+10. Use this project's Godot MCP tools (see "Current MCP" below) for all resource operations —
+    never raw shell `mv`/`rm`, even as a workaround when Tier 1 is unavailable (see Step 0). Raw
+    filesystem operations can silently break UID-based or path-based resource references the
+    engine tracks internally; if Tier 1 is down, defer the resource operation rather than
+    dropping to shell commands.
+11. If a queued step is ambiguous, contradicts the target system file or blueprint, or requires
+    a scope/architecture decision, stop and flag it rather than improvising — that decision
+    belongs to the Architect Agent, not the Executor Agent.
+12. Upon task completion:
+    - **HIGH PRIORITY — documentation consistency, not skippable.** Before anything else in this
+      step, identify every markdown file whose described behavior, signals, functions, or status
+      this change affects — not just the checklist below as a ceiling. That includes
+      `project-state/[system]/[system].md`, `bugs/[system]/[system].md`, either `_overview.md` master, this
+      project's root `README.md` (see "Project README" above), and any `design_docs/*.md` that
+      documented the now-superseded behavior — and update every one that's now stale. A markdown
+      describing behavior the code no longer does is worse than no documentation; treat it the
+      same as a failing test. This is design drift, not a bug — see "Bugs vs. Design Drift" above.
+      If the discrepancy is instead the code failing to do what was intended, that's a bug and
+      belongs in `bugs/[system]/[system].md` per "Bug Lifecycle" above, not a doc edit. The
+      trivial-task exemption below only shortens *which* files need a full status update — it
+      never means skipping this check.
+    - **Tweak Guide sync, also not skippable, also not covered by the trivial-task exemption.**
+      If this task added, removed, renamed, or changed the default of any `@export` var or tuning
+      `const`, update the matching row(s) in `./project-state/tweak_guide.md` in this same task —
+      see "Tweak Guide" above. A one-line tunable-value fix is exactly the kind of change the
+      trivial-task exemption is meant for elsewhere, but it's precisely what this file exists to
+      track, so it still gets updated even when everything else in this step is skipped. Confirm
+      every `@export` var touched still has an accurate `##` doc comment immediately above it
+      (workflow item 7) — add or correct it if missing or stale.
+    - **Test authorship.** For any new public function/signal added to a system being marked
+      `Wired-in` or higher, add a corresponding test case to that system's test file before it can
+      be marked `Verified-in-game`. If the system has no test file yet, create one named
+      `test_[system].gd` under `tests/`, `extends TestCase` (see `docs/templates/common/tests/test_case.gd`
+      — its `assert_true`/`assert_eq`/`assert_almost_eq` helpers and `failures` array are what
+      `run_tests.gd` depends on), with `test_`-prefixed methods for each case — that's what makes
+      it auto-discovered. This is a hard gate, not a nice-to-have — running `tests/run_tests.gd`
+      is not a substitute for growing its coverage.
+    - **Visual Validation (Screenshot Probing):** For any UI or visual task, before marking it `Verified-in-game`, you MUST run the project (`run_project`) and use `game_screenshot` to visually inspect the isolated `test_[feature].tscn`. Ensure layouts don't overlap and nodes render correctly.
+    - Review the diff yourself before marking anything `Verified-in-game` (use your agent's
+      code-review command if it has one, e.g. `/code-review` in Claude Code) — catch
+      correctness/simplification issues while the change is still fresh, not in a later session.
+      Treat any correctness, hallucination, or design-drift finding it raises as a rejection: fix
+      the diff and re-review clean before proceeding — never mark `Verified-in-game`
+      on a rejected pass.
+    - **If this is a trivial task** (single-file, single-function fix; no new signal/behavior; no
+      tri-state status change; no bug opened or closed), skip the remaining bullets in this item — just
+      set `status` in `session_state.json` to `"COMPLETED"`. Otherwise (a
+      tri-state status actually changed, or a bug opened/closed), do the full ritual:
+    - Advance any bug entries this task fixed to `resolved` in `./bugs/master_bugs.md` (see "Bug Lifecycle" above).
+    - Update master status in `./project-state/_overview.md`.
+    - Update this project's root `README.md` — "Working"/"In Progress"/"Known Issues" sections —
+      to match the new `_overview.md`/`bugs/master_bugs.md` state.
+    - **Bookkeeping & Archive Phase:** When a feature is marked `Verified-in-game`, summarize its final state into the master docs. Move the granular details, logs, or completed task steps out of the main `project-state/[system]/[system].md` and into an `archive/` folder (e.g., `project-state/archived_tasks/`) so the active state docs do not endlessly grow. Write a brief changelog, and delete any temporary test scenes (`test_[feature].tscn`).
+    - If `session_state.json`'s `blueprint_used` field was not `null` (a blueprint was used for
+      this task), archive it now: copy `./project-state/blueprints/latest_blueprint.md` to
+      `./project-state/blueprints/archive/[timestamp]-[target_system].md` (timestamp in
+      `YYYY-MM-DD_HHMMSS` format, target_system from the field). This preserves a paper trail in
+      case a blueprint's spec and what actually got built ever diverge, and frees up
+      `latest_blueprint.md` for the next blueprint without it getting overwritten mid-archive by
+      the Architect Agent.
+    - Set `status` in `session_state.json` to `"COMPLETED"`.
+    - **Clear your context** (or start a new session) before taking the next blueprint, to keep sessions cheap and focused.
+13. Run a security review (your agent's `/security-review` command, or a deliberate manual
+    pass) before any step that adds networking, multiplayer, save-file
     parsing, or otherwise consumes untrusted input — skip it for purely local single-player
     logic where there's no meaningful attack surface.
 
@@ -305,9 +312,9 @@ specifically and Godot 3 syntax is invalid here.
 
 This project uses [`godot-mcp`](https://github.com/tugcantopaloglu/godot-mcp)
 (`@tugcantopaloglu/godot-mcp`), vendored as a submodule at `docs/tools/godot-mcp` in the shared
-`Godot_AI_Framework/` root and wired in via this project's `.mcp.json` (see `SETUP.md` Step 0). Its
+`Godot_AI_Framework_Public/` root and wired in via this project's `.mcp.json` (see `SETUP.md` Step 0). Its
 tools follow the `mcp__godot__*` naming pattern (e.g., `run_project`, `game_screenshot`,
-`game_eval`, `read_scene`, `rename_file`, `move_file`). If this project switches to a different
+`game_eval`, `read_scene`, `rename_file`, `write_file`, `delete_file`). If this project switches to a different
 Godot MCP server, run `markdowns4AI/MCP-SWITCH.md` rather than manually editing this section.
 
 

@@ -1,10 +1,9 @@
 # Remove System
 
 An on-demand playbook for retiring an entire mechanic/system from a project — deciding "we're
-done with this system, take it out," not a bug fix (which patches) or a rename/move (see
-`markdowns4AI/ORGANIZE.md`). Invocable two ways: standalone, any time the user asks to remove or retire a
-system; or as a queued task when Gemini/Antigravity scopes a task as a removal rather than a
-build/fix (see `GEMINI.md` Phase 4).
+done with this system, take it out," not a bug fix (which patches) or a rename/move. Invocable two ways: standalone, any time the user asks to remove or retire a
+system; or as a queued task when the Architect Agent scopes a task as a removal rather than a
+build/fix (see `ARCHITECT.md` Phase 4).
 
 ## Process
 
@@ -18,7 +17,7 @@ build/fix (see `GEMINI.md` Phase 4).
    sections to update, tweak_guide rows to remove, any cross-references found in step 1) and
    present it to the user for explicit approval — never proceed straight to deletion.
 3. **Delete.** Once approved:
-   - Delete the system's scripts/scenes via Godot MCP file operations.
+   - Delete the system's scripts/scenes via the Godot MCP `delete_file` tool — never raw shell `rm`.
    - Remove the system's sections/entries from `project_state.md`, `bugs.md`, and `tweak_guide.md`.
-4. **Documentation consistency, same as any task.** Same as `CLAUDE.md` step 9: update
+4. **Documentation consistency, same as any task.** Same as `EXECUTOR.md`'s task-completion step: update
    the project root `README.md`, and any `design_docs/*.md` that documented the now-removed system.

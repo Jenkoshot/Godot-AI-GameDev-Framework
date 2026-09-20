@@ -1,79 +1,42 @@
-# Global Index - Master Directory
+<!-- GENERATED FILE - do not edit by hand.
+     Regenerate with: python framework_tools/build_global_index.py
+     Entries come from the actual contents of mechanics/, scenes/, and assets/.
+     To change an entry's description, dimension, or feature area, edit its companion .md. -->
 
-This is a highly granular, relational database designed specifically for AI token efficiency. Instead of blindly scanning folders, agents can navigate directly to the specific feature markdown below to find precisely related Scripts, Scenes, and Assets bundled with their explanations.
+# Global Index — Master Directory
 
-## Asset Repository Categories
-Raw 3D models and textures in `../../assets/` are categorized by type rather than by game:
-- `building_pieces` (Modular architecture)
-- `characters` (Players, NPCs, enemies)
-- `environment_assets` (Terrain, flora, rocks)
-- `props` (Interactive objects, clutter)
+A relational routing table over the shared libraries, built for agent token efficiency. Instead of scanning `mechanics/`, `scenes/`, and `assets/` blind, an agent comes here first, picks the feature file matching what it is about to build, and gets the exact files plus their companion docs.
 
-## 2D Assets
-- [Camera Systems](./2D/camera_systems.md)
-- [Combat Logic](./2D/combat_logic.md)
-- [Combat Stats And Damage](./2D/combat_stats_and_damage.md)
-- [Combat Weapons](./2D/combat_weapons.md)
-- [Environment Vegetation](./2D/environment_vegetation.md)
-- [Minigames And Rules](./2D/minigames_and_rules.md)
-- [Movement General](./2D/movement_general.md)
-- [Movement Tethering](./2D/movement_tethering.md)
-- [Procgen Layouts](./2D/procgen_layouts.md)
-- [Procgen Spawning](./2D/procgen_spawning.md)
-- [Ui Components](./2D/ui_components.md)
-- [Ui Feedback And Juice](./2D/ui_feedback_and_juice.md)
-- [Ui Hud](./2D/ui_hud.md)
-- [Ui Transitions](./2D/ui_transitions.md)
-- [Vfx General](./2D/vfx_general.md)
+**Always start here.** Routing through the dimension-specific files (2D / 3D / Agnostic) is what stops an agent reaching for a `Node3D` mechanic in a 2D game.
 
-## 3D Assets
-- [Camera Systems](./3D/camera_systems.md)
-- [Combat Logic](./3D/combat_logic.md)
-- [Combat Loot](./3D/combat_loot.md)
-- [Combat Projectiles](./3D/combat_projectiles.md)
-- [Combat Weapons](./3D/combat_weapons.md)
-- [Environment General](./3D/environment_general.md)
-- [Environment Rocks And Cliffs](./3D/environment_rocks_and_cliffs.md)
-- [Environment Space](./3D/environment_space.md)
-- [Environment Vegetation](./3D/environment_vegetation.md)
-- [Environment Water](./3D/environment_water.md)
-- [Movement Flight](./3D/movement_flight.md)
-- [Movement General](./3D/movement_general.md)
-- [Procgen General](./3D/procgen_general.md)
-- [Procgen Layouts](./3D/procgen_layouts.md)
-- [Procgen Scatter Tools](./3D/procgen_scatter_tools.md)
-- [Shaders](./3D/shaders.md)
-- [Vfx Decals](./3D/vfx_decals.md)
-- [Vfx Energy](./3D/vfx_energy.md)
-- [Vfx Explosions](./3D/vfx_explosions.md)
-- [Vfx Fire](./3D/vfx_fire.md)
-- [Vfx General](./3D/vfx_general.md)
-- [Vfx Impacts](./3D/vfx_impacts.md)
-- [Vfx Liquid](./3D/vfx_liquid.md)
-- [Vfx Smoke](./3D/vfx_smoke.md)
+---
 
-## Agnostic Assets
-- [Camera Systems](./Agnostic/camera_systems.md)
-- [Combat Logic](./Agnostic/combat_logic.md)
-- [Combat Projectiles](./Agnostic/combat_projectiles.md)
-- [Combat Stats And Damage](./Agnostic/combat_stats_and_damage.md)
-- [Combat Weapons](./Agnostic/combat_weapons.md)
-- [Environment General](./Agnostic/environment_general.md)
-- [Environment Rocks And Cliffs](./Agnostic/environment_rocks_and_cliffs.md)
-- [Environment Vegetation](./Agnostic/environment_vegetation.md)
-- [Environment Water](./Agnostic/environment_water.md)
-- [Minigames And Rules](./Agnostic/minigames_and_rules.md)
-- [Movement Flight](./Agnostic/movement_flight.md)
-- [Movement General](./Agnostic/movement_general.md)
-- [Movement Tethering](./Agnostic/movement_tethering.md)
-- [Procgen General](./Agnostic/procgen_general.md)
-- [Procgen Layouts](./Agnostic/procgen_layouts.md)
-- [Procgen Scatter Tools](./Agnostic/procgen_scatter_tools.md)
-- [Procgen Spawning](./Agnostic/procgen_spawning.md)
-- [Shaders](./Agnostic/shaders.md)
-- [Vfx Decals](./Agnostic/vfx_decals.md)
-- [Vfx Explosions](./Agnostic/vfx_explosions.md)
-- [Vfx Fire](./Agnostic/vfx_fire.md)
-- [Vfx General](./Agnostic/vfx_general.md)
-- [Vfx Liquid](./Agnostic/vfx_liquid.md)
+## Status: empty
 
+The shared libraries in this checkout contain no entries yet, so there are no feature files to route to. That is expected for a fresh clone — the libraries are populated from your own projects, not shipped pre-filled.
+
+An agent that reaches this page should note the libraries are empty and proceed to build from scratch, rather than spending further calls looking for something to reuse.
+
+To add the first entry: build the mechanic in a game, then run the `HARVEST-REPO.md` protocol from that project. It copies the files here, strips the game-specific coupling, writes the companion `.md`, and reruns this index.
+
+Historical note: a previous version of this index listed ~1,200 entries pointing at two asset packs (`effect-blocks`, `poly-blocks`) that are not part of this distribution. Those hand-written descriptions are preserved in [`_ARCHIVED-ENTRY-NOTES.md`](./_ARCHIVED-ENTRY-NOTES.md) as a wishlist.
+
+---
+
+## Library layout
+
+| Library | Contents |
+| :--- | :--- |
+| `../mechanics/` | Reusable `.gd` scripts by category, each with a companion `.md`. |
+| `../scenes/` | Reusable `.tscn` / `.tres` structures. |
+| `../assets/` | Raw assets: `models/` (with `building_pieces/`, `characters/`, `environment_assets/`, `props/` beneath it), `music/`, `sfx/`, `vfx/`. |
+
+---
+
+## Feature taxonomy
+
+Every entry lands in one of these feature areas, under one of the three dimensions (2D / 3D / Agnostic). A feature file is created the first time something classifies into it, so the sections above list only what exists right now.
+
+`camera_systems`, `combat_logic`, `combat_loot`, `combat_projectiles`, `combat_stats_and_damage`, `combat_weapons`, `environment_general`, `environment_rocks_and_cliffs`, `environment_space`, `environment_vegetation`, `environment_water`, `minigames_and_rules`, `movement_flight`, `movement_general`, `movement_tethering`, `procgen_general`, `procgen_layouts`, `procgen_scatter_tools`, `procgen_spawning`, `shaders`, `ui_components`, `ui_feedback_and_juice`, `ui_hud`, `ui_transitions`, `vfx_decals`, `vfx_energy`, `vfx_explosions`, `vfx_fire`, `vfx_general`, `vfx_impacts`, `vfx_liquid`, `vfx_smoke`
+
+To steer where an entry lands, put `<!-- index: vfx_explosions -->` and/or `<!-- dimension: 3D -->` in its companion `.md`. Otherwise the category folder and the code itself decide.

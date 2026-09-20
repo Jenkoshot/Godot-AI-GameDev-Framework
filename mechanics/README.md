@@ -1,41 +1,68 @@
 # Mechanic Repository
 
-A shared, git-tracked library of engine-agnostic-to-*which game* Godot mechanics pulled out of
-past projects — checked before writing new code for a system that's plausibly already been
-solved once. This is not a per-project template (see `docs/templates/` for those); it's a
-growing collection of working, reusable implementations.
+A shared, git-tracked library of reusable Godot mechanics pulled out of past projects — checked
+before writing new code for a system that has plausibly already been solved once. This is not a
+per-project template (see `docs/templates/` for those); it is a growing collection of working
+implementations, generalised so they are agnostic to *which game* uses them.
 
-Read side is wired into the dual-agent workflow: Gemini checks here before scoping new
-implementation work (see `GEMINI.md`'s "Mechanic Repository" section) and Claude Code knows how
-to pull an entry in (see `CLAUDE.md`'s "Mechanic Repository" section). Populating this repository
-itself is a separate, manual curation step — nothing here gets added or edited automatically.
+> **This library is currently empty.** Nothing ships pre-filled. It grows from your own projects
+> via the `HARVEST-REPO.md` protocol — build a mechanic in a game, prove it works, then harvest
+> it here.
+
+## How agents use it
+
+Read side is wired into the agent workflow: the Architect checks here before scoping new
+implementation work, and the Executor knows how to pull an entry in. Neither scans this folder
+directly — both route through `../global-index/README.md`, which classifies every entry by
+dimension (2D / 3D / Agnostic) and feature area so an agent never reaches for a `Node3D` mechanic
+in a 2D game.
+
+The index is **generated**, not hand-maintained:
+
+```bash
+python framework_tools/build_global_index.py
+```
+
+Run it after adding or removing anything here. `--check` exits non-zero if the index has drifted,
+which makes it usable as a pre-commit or CI guard.
 
 ## Structure
 
-One folder per category, created only once it has a real entry (no placeholder folders for
-hypothetical future categories). Current categories:
+One folder per category, created only once it has a real entry — no placeholder folders for
+hypothetical future categories. The categories the index knows how to route:
 
 ```
-mechanics/
-  ai/            combat/        input/         procgen/       spawning/      utility/
-  audio/         minigame/      movement/      rules_engine/  ui/            vfx/
-  camera/
+ai/        camera/    input/      movement/      rules_engine/   ui/
+audio/     combat/    minigame/   procgen/       spawning/       utility/     vfx/
 ```
 
 Most mechanics are exactly two files, same base name, in their category folder:
 
-- `<mechanic_name>.gd` — the script itself, generalized to drop project-specific coupling
-  (hardcoded node paths, autoload names unique to the source project, magic values tuned for
-  one game's feel) in favor of `@export`s and clearly-named extension points.
-- `<mechanic_name>.md` — the companion doc, using the template below. This is what makes an
-  entry usable without re-reading the code first.
+- `<mechanic_name>.gd` — the script, generalised to drop project-specific coupling (hardcoded node
+  paths, autoload names unique to the source project, magic values tuned for one game's feel) in
+  favour of `@export`s and clearly-named extension points.
+- `<mechanic_name>.md` — the companion doc, using the template below. This is what makes an entry
+  usable without reading the code first, and it is where the index gets each entry's description.
 
-**Multi-file exception:** some mechanics are inherently several cooperating classes (Godot
-requires one `class_name` per file) — e.g. `movement/tether_*.gd` (5 files, one physics system)
-or `combat/projectile_preset*.gd` + `preset_driven_projectile.gd` (a data resource + pool +
-consumer). These still ship as exactly one companion `.md`, but its filename won't match any
-single `.gd`'s base name — it's named for the system as a whole (e.g.
-`movement/tether_swing_physics.md`). The doc's own text lists every file it covers.
+**Multi-file exception:** some mechanics are inherently several cooperating classes, because Godot
+allows one `class_name` per file — a tethering physics system split across five scripts, or a
+projectile system that is a data resource plus a pool plus a consumer. These still ship exactly
+one companion `.md`, named for the system as a whole rather than matching any single `.gd`. The
+doc's own text lists every file it covers.
+
+## Steering the index
+
+Two optional HTML comments in a companion `.md` override the automatic classification:
+
+```markdown
+<!-- index: vfx_explosions -->
+<!-- dimension: 3D -->
+```
+
+Without them, the feature area comes from the category folder and the dimension is inferred from
+the code (`Vector2`/`Node2D`/`Sprite2D` versus `Vector3`/`Node3D`/`MeshInstance3D`; both or
+neither means Agnostic). Set them when the inference would be wrong — for example a pure-maths
+helper in `movement/` that belongs under `procgen_layouts`.
 
 ## Companion doc template
 
@@ -43,7 +70,8 @@ single `.gd`'s base name — it's named for the system as a whole (e.g.
 # <Mechanic Name>
 
 ## What it does
-One or two plain-language sentences.
+One or two plain-language sentences. The first line becomes the entry's description in the
+global index, so lead with what it does, not how it works.
 
 ## Dependencies
 - Godot version assumptions (if narrower than 4.x generally)
@@ -66,32 +94,14 @@ assumptions it makes, performance caveats.
 
 ## Adding an entry
 
-Manual, on-demand — not something either agent does mid-task. When a script proves genuinely
-reusable (built for one project, no game-specific coupling left after review), copy it in under
-the right category with its companion doc filled out per the template above. Prefer generalizing
-a script in place over leaving multiple near-duplicate variants of the same mechanic.
+Deliberate and on-demand, not something an agent does mid-task. When a script proves genuinely
+reusable — built for one project, no game-specific coupling left after review — run
+`HARVEST-REPO.md` from that project, or copy it in by hand under the right category with its
+companion doc filled out. Prefer generalising a script in place over leaving several near-duplicate
+variants of the same mechanic.
 
-## Master Index
+UI is always harvested as a **pair**: the scene into `../scenes/ui/`, the script here in `ui/`,
+with each companion doc cross-linking the other.
 
-*The following is a high-level overview of the available mechanics so agents can decide whether to reuse, adapt, or build from scratch.*
-
-### Movement (`movement/`)
-- **`movement_state_machine.gd`**: A highly decoupled, game-agnostic first-person movement core based on a hierarchical state machine (Grounded, Airborne, Sliding).
-- **`bounce_pad_trigger.gd`**: A generic trigger that launches CharacterBody3Ds upward upon overlap. (Partner scene in `scenes/movement/bounce_pad.tscn`)
-
-### Minigame (`minigame/`)
-- **`physics_crafter.gd`**: A crafting node that dynamically shrinks physics bodies when they collect inside an area and pops out a configured result object.
-
-### UI (`ui/`)
-- **`hud.gd`**: A decoupled Heads-Up Display logic script that binds to a generic `ammo_changed` signal. (Partner scene in `scenes/ui/hud.tscn`)
-- **`reticle.gd`**: A procedural crosshair `Control` node that draws itself without relying on textures.
-- **`scene_transition.gd`**: A scene autoload owning an entire scene change — iris wipe closed, `change_scene_to_file()`, wipe open — with duck-typed `on_transition_out()` / `on_transition_in()` hooks so scenes opt into flourishes and a scene that implements neither still transitions. Requires `iris_wipe.gd`. (Partner scene in `scenes/ui/scene_transition.tscn`)
-- **`iris_wipe.gd`**: The iris wipe's progress→radius maths as pure static functions, mirroring the shader so corner coverage is unit-testable without a viewport. (Companion of `scene_transition.gd`)
-- **`scale_pulse_component.gd`**: A reusable component to punch the scale of a `CanvasItem` on a beat or event, settling securely back to its resting scale without compounding scale errors. (Partner scene in `scenes/ui/scale_pulse_component.tscn`)
-- **`interactive_button_component.gd`**: A generic component to standardize button interaction feedback, adding hover scale tweens and optional audio hooks. (Partner scene in `scenes/ui/interactive_button_component.tscn`)
-
-### Audio (`audio/`)
-- **`throttled_audio_component.gd`**: A generic audio rate-limiter that spaces out rapidly-fired overlapping sound effects using global lockouts. (Partner scene in `scenes/audio/throttled_audio_component.tscn`)
-
-### VFX (`vfx/`)
-- **`impact_burst.gd`**: A generic hit feedback visual effect script that self-cleans on emission completion. (Partner scene in `scenes/vfx/impact_burst.tscn`)
+Then regenerate the index. An index entry pointing at a file that is not there is worse than no
+entry at all — it sends every future agent on a lookup that fails.

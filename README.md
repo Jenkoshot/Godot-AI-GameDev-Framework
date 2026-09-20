@@ -1,145 +1,1100 @@
 # Godot AI GameDev Framework
 
-Welcome to the **Godot AI GameDev Framework**. This repository is a scalable, tiered architecture designed to solve the biggest bottlenecks in AI-assisted game development: context window bloat, Godot scene corruption, and code duplication. 
+A monorepo + playbook system for building Godot 4 games with AI coding agents.
 
-Instead of treating every game as an isolated folder, this monorepo acts as a **centralized brain** utilizing a universal Architect & Executor Workflow.
+It exists to solve four specific failure modes that show up the moment you point an AI at a real
+game project:
+
+| Failure mode | What this framework does about it |
+| :--- | :--- |
+| **Context bloat** — the agent reads 40 files to change one variable | Tiered, lazy-loaded documentation. The agent reads only the system it was assigned. |
+| **Scene corruption** — the agent hand-edits a `.tscn` and breaks every UID reference | All resource operations go through a Godot MCP server that talks to the engine. |
+| **Planner/coder collision** — one agent both designs and codes, badly | Split roles: an **Architect** that plans and writes blueprints, an **Executor** that only implements them. |
+| **Reinventing the same mechanic** — every project rebuilds a health bar | Shared `mechanics/` `scenes/` `assets/` libraries the agents are mandated to check first. |
+
+> **Read this before you start:** this repository is the *scaffolding and rules*, not a finished
+> product. The shared asset libraries ship empty, and the 3D modelling workspace needs three small
+> fixes before it will run. Everything known is listed in
+> [Known Limitations](#known-limitations--rough-edges) — read that section before you file a bug.
 
 ---
 
-## 🖥️ Compatibility & Tested Environments
+## Contents
 
-While the markdown templates technically allow you to use any AI, this framework has been rigorously tested against specific configurations:
-- **Tested AI Agents:** ChatGPT Codex, Claude Code, and Antigravity (Gemini).
-- **Primary Environment:** Fully tested using the Desktop App versions of these AIs on **Windows**.
-- **CLI Environments:** It should work perfectly with terminal/CLI versions of these AIs on Windows as well, provided your Node/Python environment variables are set up correctly.
-- **Linux/macOS:** Currently **untested**. Because the framework relies on standard Python and Node.js scripts, it should be natively compatible, but certain pathing logic (like pointing to the Godot executable in `machine_paths.json`) will require your own manual configuration.
+1. [How it works](#1-how-it-works-the-mental-model)
+2. [Requirements](#2-requirements)
+3. [Installation](#3-installation)
+4. [Connecting your AI agent (required — nothing does this for you)](#4-connecting-your-ai-agent)
+5. [Your first game, start to finish](#5-your-first-game-start-to-finish)
+6. [The daily loop](#6-the-daily-loop)
+7. [Anatomy of a generated project](#7-anatomy-of-a-generated-project)
+8. [The scale tiers](#8-the-scale-tiers)
+9. [Playbook reference](#9-playbook-reference)
+10. [The shared libraries](#10-the-shared-libraries)
+11. [Procedural 3D modeling](#11-procedural-3d-modeling)
+12. [framework_tools](#12-framework_tools)
+13. [Customizing AI behavior](#13-customizing-ai-behavior)
+14. [Troubleshooting](#14-troubleshooting)
+15. [Known limitations & rough edges](#known-limitations--rough-edges)
+16. [Repository layout](#repository-layout)
+17. [Credits & licensing](#credits--licensing)
 
 ---
 
-## ⚡ 1. Initial Installation
+## 1. How it works (the mental model)
 
-Setting up the framework is completely automated. Open your preferred AI terminal (like Antigravity or Claude Code) at the **root of this repository** and say:
+There are **three places you run an AI agent**, and they behave differently because they read
+different files.
+
+### The Director — an agent at the repo root
+
+This is where you brainstorm, create new projects, edit the framework's own rules, and run
+repo-wide tooling. It has no Godot MCP connection and no game context. It is for meta-work.
+
+### The Architect — an agent inside `Projects/<YourGame>/`, reading `ARCHITECT.md`
+
+The planner. It never writes GDScript. Its job, every session:
+
+1. Read the project's doctrine, design docs, and state files.
+2. Report a completion percentage against the design docs.
+3. Offer you **three** candidate tasks and **stop and wait** for you to pick one.
+4. Write a detailed **blueprint** — scene tree, signals, `@export` parameters, the math
+   *relationships* (not hardcoded magic numbers).
+5. Emit a **copy-paste handoff prompt** plus a recommendation of which model/effort to use.
+6. After the Executor finishes, run an **adversarial audit**: compare the archived blueprint
+   against the code that actually landed and file bugs for anything silently dropped.
+
+### The Executor — an agent inside the same folder, reading `EXECUTOR.md`
+
+The implementer. It never decides scope. It reads the blueprint, writes strictly-typed GDScript 4,
+drives the Godot MCP for anything touching `.tscn`/`.tres`, writes tests, updates the state files,
+and stops to flag anything ambiguous rather than improvising.
+
+> **Why two agents instead of one?** The Architect needs wide context (all design docs, all state)
+> and the Executor needs narrow context (one blueprint, one system). Running them as one session
+> means paying for wide context on every code edit. If you only have one AI, use `SOLO-AGENT.md`,
+> which carries both role sets plus the two rules that stop a solo session from collapsing them:
+> finish planning before writing code, and clear context between the two halves.
+
+### The loop
+
+```
+        ┌─────────────────────────────────────────────────────┐
+        │                                                     │
+   You ─┴─> ARCHITECT ──> 3 tasks ──> you pick ──> blueprint ─┐
+                                                              │
+                                                    handoff   │
+                                                    prompt    │
+                                                              ▼
+   You <── audit <── ARCHITECT <── you playtest <── EXECUTOR ─┘
+```
+
+---
+
+## 2. Requirements
+
+| Requirement | Version | Why |
+| :--- | :--- | :--- |
+| **Godot** | 4.4+ | Target engine. The MCP server drives this binary. |
+| **Node.js** | 18+ | Builds and runs the Godot MCP server and the 3D modelkit. |
+| **Python** | 3.8+ | `framework_tools/` sync scripts. |
+| **gdtoolkit** | latest | Provides `gdformat` / `gdlint`, which `EXECUTOR.md` runs before every headless check. `pip install gdtoolkit` |
+| **Git** | any | Each game becomes its own independent repository. |
+
+### Tested environments
+
+- **AI agents:** ChatGPT Codex, Claude Code, Antigravity (Gemini).
+- **Primary:** desktop app versions of those agents, on **Windows**.
+- **CLI:** should work on Windows given a correct Node/Python PATH.
+- **Linux/macOS:** **untested.** The logic is portable Python and Node, but every path in
+  `docs/machine_paths.json` and the `GODOT_PATH` instructions are written Windows-first. Expect to
+  do your own pathing.
+
+### MCP servers used
+
+Both are declared in `docs/templates/common/mcp_config.json`, which gets copied into each project.
+
+- **`godot`** — [tugcantopaloglu/godot-mcp](https://github.com/tugcantopaloglu/godot-mcp), vendored
+  at `docs/tools/godot-mcp/`. ~157 tools: `run_project`, `game_screenshot`, `game_eval`,
+  `read_scene`, `modify_scene_node`, `rename_file`, `manage_autoloads`, `manage_input_map`, and so on.
+- **`context7`** — pulled on demand via `npx @upstash/context7-mcp`. The Executor uses it to look up
+  current Godot 4 API signatures instead of recalling them.
+
+---
+
+## 3. Installation
+
+### The short version
+
+```bash
+git clone <your-fork-url> Godot_AI_Framework_Public
+cd Godot_AI_Framework_Public
+cd docs/tools/godot-mcp && npm install && npm run build && cd ../../..
+cd model-generation && npm install && cd ..
+pip install gdtoolkit
+```
+
+Then configure your Godot path — see [3.3](#33-tell-the-framework-where-godot-is) below. That step
+is the one people get wrong.
+
+### The AI-assisted version
+
+Open an AI terminal at the **root of this repository** and say:
 
 > *"Run the SETUP-FRAMEWORK playbook."*
 
-The AI will automatically install the Node and Python requirements, compile the Godot MCP server, and ask you for your Godot `.exe` file path to configure the environment.
+It will walk `SETUP-FRAMEWORK.md`: verify prerequisites, `npm install && npm run build` the MCP
+server, `npm install` the modelkit, ask for your Godot executable path, and write it into
+`docs/machine_paths.json`.
+
+**It will not restart your agent for you, and it must be restarted.** See 3.3.
+
+### 3.1 Build the MCP server — this is not optional
+
+`docs/tools/godot-mcp/build/` is excluded from version control by that project's own `.gitignore`.
+A fresh clone has TypeScript source and **no compiled server**. Until you build it, every
+`mcp__godot__*` tool is missing and the Executor is limited to plain text edits.
+
+```bash
+cd docs/tools/godot-mcp && npm install && npm run build
+```
+
+Verify: `docs/tools/godot-mcp/build/index.js` now exists.
+
+> **Note:** `.gitmodules` declares `docs/tools/godot-mcp` as a git submodule, but the source is
+> actually committed as ordinary files. `git submodule update --init --recursive` — which several
+> playbooks tell the agent to run — does nothing here. Ignore it; just build.
+
+### 3.2 Install the modelkit
+
+```bash
+cd model-generation && npm install
+```
+
+This pulls `antics-modelkit` and `three`. It also unpacks the kit's own 52 KB technique guide at
+`model-generation/node_modules/antics-modelkit/AGENTS.md`, which the AI is required to read before
+generating any 3D model.
+
+### 3.3 Tell the framework where Godot is
+
+There are **two separate places** this has to be recorded, and skipping the second is the single
+most common reason the MCP "doesn't work."
+
+**(a) `docs/machine_paths.json`** — a committed, hostname-keyed log so your agents can find Godot
+on any of your machines without rediscovering it.
+
+Find your hostname:
+- Windows PowerShell: `$env:COMPUTERNAME`
+- macOS / Linux: `hostname`
+
+Replace the `YOUR_COMPUTER_NAME_HERE` placeholder key with that value, and fill in the real paths:
+
+```json
+{
+  "machines": {
+    "MY-DESKTOP": {
+      "label": "My Dev Machine",
+      "os": "windows",
+      "godot_path": "C:\\Program Files\\Godot\\Godot_v4.4-stable_win64.exe",
+      "godot_version": "4.4",
+      "godot_source": "standalone",
+      "node_path": "C:\\Program Files\\nodejs\\node.exe",
+      "last_verified": "2026-09-20"
+    }
+  }
+}
+```
+
+**(b) The `GODOT_PATH` environment variable** — this is what the MCP server itself actually reads.
+`mcp_config.json` does **not** inject it. The server auto-detects Godot in a few standard
+locations, but it does **not** scan Steam library folders on Windows or Linux, so a Steam install
+will fail auto-detection.
+
+```powershell
+setx GODOT_PATH "C:\Program Files\Godot\Godot_v4.4-stable_win64.exe"
+```
+
+```bash
+export GODOT_PATH=/path/to/godot   # add to ~/.bashrc or ~/.zshrc
+```
+
+**Then fully quit and relaunch your AI agent.** Environment variables and the MCP server list are
+read once at process start. Retrying the tool call in the same session will not pick it up.
+
+Verify: ask your agent to call `get_godot_version`. A version string means you are done.
+
+### 3.4 Install gdtoolkit
+
+```bash
+pip install gdtoolkit
+```
+
+Verify with `gdformat --version`. The Executor runs `gdformat .` and `gdlint .` on modified scripts
+before every headless test run.
 
 ---
 
-## 🏗️ 2. The Root Workspace (The Director)
+## 4. Connecting your AI agent
 
-When your AI is running at the **root of the repository**, it acts as the Director. This is where you brainstorm ideas, create new games, and manage the overall workflow. 
+**This is a manual step the framework does not do for you, and nothing works properly without it.**
 
-**Demo Prompts (Run at the Root):**
-* **Brainstorming:** *"I want to make a cozy farming game mixed with a roguelike. Read my GDD.md, critique it, and let's brainstorm a core gameplay loop."*
-* **Creating a Project:** *"Run the SETUP playbook based on my GDD. I want to create a new Standard Tier project called FarmRogue."*
-* **Editing the Workflow:** *"I want to update the EXECUTOR.md template so that the AI always adds a header comment to every script it writes. Update the template and run sync_templates.py to push it to all my games."*
-* **Updating Global Tooling:** *"Look at my framework_tools python scripts. Can you write a new script that automatically zips up my projects for a release?"*
+The governance files are named `ARCHITECT.md`, `EXECUTOR.md`, and `SOLO-AGENT.md`. No AI agent
+auto-loads files with those names. Each agent looks for its own filename:
 
-**Behind the Scenes (Creating a Project):**
-When you run the SETUP playbook, here is exactly what the AI does automatically:
-1. **Reads the GDD:** It absorbs your game's mechanics, scope, and aesthetic.
-2. **Tier Selection:** It asks you whether the project should be a Lite, Standard, or Heavy tier based on the GDD scope.
-3. **Documentation Scaffolding:** Depending on the tier, it generates the tracking files. (Lite gets 3 root markdown files; Standard gets a `project-state/` folder; Heavy gets per-system folders like `combat/` and `inventory/`).
-4. **Godot Project Creation:** It physically creates the `Projects/[YourGame]/` directory, generates a valid `project.godot` file, and an `icon.svg` so the engine recognizes it immediately.
-5. **Git Initialization:** It runs `git init` inside your specific project folder. This ensures every single game you make acts as an isolated Git repository, ready to be pushed to its own GitHub page.
+| Agent | Auto-loads |
+| :--- | :--- |
+| Claude Code | `CLAUDE.md` |
+| ChatGPT Codex | `AGENTS.md` |
+| Antigravity / Gemini CLI | `GEMINI.md` |
 
----
+So after a project is scaffolded, you have two options.
 
-## ⚖️ The Scale Tiers: Choosing Your Architecture
+**Option A — pointer file (recommended).** Create the file your agent looks for, containing one
+line. In `Projects/<YourGame>/`:
 
-Not every game needs the same level of AI bureaucracy. If you force an AI to read 20 architectural documents for a Flappy Bird clone, you waste tokens. If you don't use enough documentation for a massive RPG, the AI will hallucinate. 
+```bash
+echo "Read and follow EXECUTOR.md in this directory. Re-read it at the start of every response." > CLAUDE.md
+```
 
-### 🟢 Lite Tier
-* **What it has:** Zero folder clutter. State is tracked in just three files located directly at the root of your game: `project_state.md`, `bugs.md`, and `tweak_guide.md`.
-* **How it works:** The AI reads those three files instantly, giving it lightning-fast context on your game without navigating directories.
+```bash
+echo "Read and follow ARCHITECT.md in this directory. Re-read it at the start of every response." > AGENTS.md
+```
 
-### 🟡 Standard Tier
-* **What it has:** Cleans up the root directory by moving documentation into dedicated `project-state/` and `bugs/` folders. It introduces the `blueprints/` directory.
-* **How it works:** The Architect AI drafts detailed Markdown blueprints in the blueprints folder. The Executor AI reads that blueprint and executes it, keeping planning and coding completely separated for higher quality code.
+This keeps the real rules in one file that `sync_templates.py` can update.
 
-### 🔴 Heavy Tier
-* **What it has:** Granular, per-system tracking. Instead of one master state file, documentation is split into discrete folders (e.g., `project-state/combat/`, `project-state/inventory/`). It also enforces `architecture_decisions.md` (ADRs) and `session_log.md` tracking.
-* **How it works:** Completely eliminates context-window bloat. If the AI is working on the inventory, it is strictly forbidden from reading the combat documentation. It ensures the AI only loads the exact context it needs for the task at hand.
+**Option B — say it every session.** Start each session with *"Read ARCHITECT.md and follow it."*
+Works, but you will forget, and the templates open with a mandatory-re-read directive that assumes
+the file is already loaded.
 
----
-
-## 🎮 3. Working on a Project (The Daily Loop)
-
-You don't need to clutter the repo with test assets to see if this works. You can prove it yourself in 5 minutes. Here is the exact step-by-step loop for building a feature:
-
-**Step 1: The Architect (Project Evaluation & Planning)**
-Open your Architect AI inside `Projects/[YourGame]/`. 
-*Prompt:* > *"What is the state and progress of the project, and what is the next task?"*
-
-The Architect will evaluate your entire project, calculate completion percentage, and present you with **3 tasks** to choose from. 
-
-**Step 2: Task Selection & Blueprinting**
-*Prompt:* > *"Let's go with Task 2."*
-
-Once you choose a task, the Architect will generate a highly detailed blueprint. At the end, it will give you a copy-paste prompt and recommend which model size and effort level the Executor should use.
-
-**Step 3: The Executor (Coding)**
-Open your Executor AI in the same folder. Paste the exact prompt the Architect just gave you. The Executor will read the blueprint, use the Godot MCP to safely modify the `.tscn` files, and write the GDScript.
-
-**Step 4: Playtest & Tweak**
-Open the project in the Godot Engine and press Play. If the movement feels too slow, ask the Executor: 
-*Prompt:* > *"The player moves too slow. Increase the speed variable, and don't forget to log this adjustment in the tweak_guide.md file."*
+> If you run **both** agents in the same folder, give each a pointer file aimed at its own role.
+> Do not point both at the same document.
 
 ---
 
-## 🎨 4. Procedural 3D Modeling Deep Dive (`antics.gg`)
+## 5. Your first game, start to finish
 
-Need a 3D asset but don't know how to use Blender? Open your AI terminal inside the `/model-generation/` folder. 
+### Step 1 — Write a design document
 
-This folder uses the `antics.gg` procedural modelkit. The AI doesn't hallucinate raw binary 3D meshes. Instead, it writes a Javascript recipe (`models.mjs`) that mathematically constructs the model.
+Create `Projects/<YourGame>/design_docs/` and put your GDD in it as one or more `.md` files.
 
-**Step-by-Step Generation:**
-1. Drop a reference image (concept art) into the chat.
-2. *Prompt:* > *"Analyze this image. I need a low-poly stylized medieval broadsword. Write the procedural generation recipe for it in models.mjs. Use basic extrusions and bevels."*
-3. Run `node build.js` in your terminal.
-4. It will spit out a `.glb` file. Drag this file into your global `assets/models/` folder.
-5. *Iteration:* If the sword looks wrong, do not regenerate it from scratch! Tell the AI: *"Modify the script to make the hilt 20% wider and the blade slightly glowing blue."* It only has to change a few variables in the code.
+**The folder name matters.** Every Architect template reads `./design_docs/*.md` by glob. A
+`GDD.md` sitting at the project root will not be found.
 
-*Pro-Tip:* Always use the smartest models available (like Claude 3.5 Sonnet or GPT-4o) for this workspace. 3D spatial math is highly complex.
+It does not need to be polished. A page of "here's the loop, here's the feel, here's the scope" is
+enough for the Architect to reason about scope and pick a tier. You can also brainstorm it with the
+Director first:
+
+> *"I want a cozy farming game mixed with a roguelike. Help me write a GDD covering the core loop,
+> progression, and a realistic first-milestone scope. Save it to
+> `Projects/FarmRogue/design_docs/GDD.md`."*
+
+### Step 2 — Scaffold the project
+
+From the repo root:
+
+> *"Run the SETUP playbook from `docs/templates/SETUP.md` for `Projects/FarmRogue`, reading its
+> design_docs to propose a tier."*
+
+The playbook will:
+
+1. Check the MCP server is built and copy `mcp_config.json` into the project as both
+   `.agents/mcp_config.json` and `.mcp.json`, fixing the relative path depth.
+2. Read `design_docs/` and **propose a tier**, then wait for you to confirm.
+3. Create `markdowns4AI/` and copy in the common + tier governance files.
+4. Scaffold the tier's tracking files (see [Section 7](#7-anatomy-of-a-generated-project)).
+5. Write the project's own root `README.md` with empty Working / In Progress / Known Issues lists.
+6. Edit `project.godot` to add `gdscript/warnings/untyped_declaration=2`, which makes Godot itself
+   enforce strict typing.
+7. Create a folder architecture (`scenes/`, `scripts/`, `audio/sfx/`, `vfx/`, …) based on what the
+   design docs actually call for.
+
+Its Step 3 also bootstraps the project itself: it checks for `project.godot` and `icon.svg`
+(offering to create them, though letting Godot's own **Project → New Project** make them is
+cleaner), runs `git init` inside the project folder, writes a project `.gitignore`, and creates
+`design_docs/` if it is missing. Each game is its own repository — the framework's root
+`.gitignore` deliberately excludes `Projects/*/`.
+
+Step 4a also creates your **agent pointer file** (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`) after
+asking which agent you run — see [Section 4](#4-connecting-your-ai-agent) for why that matters.
+
+### Step 3 — Fill in the two files only you can write
+
+The Architect treats both as mandatory reads. They ship as placeholders full of `[Insert X Here]`,
+and an unfilled doctrine means the AI invents your taste for you.
+
+**`markdowns4AI/PROJECT-PROFILE.md`** — name, tier, 2D/3D, genre, camera, art style, core loop,
+technical constraints. Cheap to fill; it is the first thing the agent reads to orient itself.
+**The `Current Tier:` line is load-bearing** — `sync_templates.py` parses it to decide which tier's
+templates to push.
+
+**`markdowns4AI/DOCTRINE.md`** — your non-negotiables:
+
+```markdown
+## Design Pillars
+- Combat is turn-based. Never propose real-time action.
+- No punishment mechanics. The player cannot lose progress.
+
+## Architectural Constraints
+- Never use singletons for gameplay state. Autoloads are for services only.
+- UI does not use state machines.
+
+## Art & Audio Taste
+- 16-bit pixel art, strict NES palette.
+- Lo-fi synthwave only.
+```
+
+Doctrine is the highest-leverage file in the project. Every wasted argument you have with the AI
+about style is one line you should have written here.
+
+### Step 4 — Wire up your agent
+
+Create the pointer files from [Section 4](#4-connecting-your-ai-agent). Restart the agent.
+
+### Step 5 — Build
+
+Go to [The daily loop](#6-the-daily-loop).
 
 ---
 
-## 🗂️ The Anatomy of a Game Project (Tracking Files)
+## 6. The daily loop
 
-If you are wondering exactly how the AI keeps track of your game without reading the entire codebase every time, it uses these specific markdown files generated inside your `Projects/[YourGame]/` folder.
+### 6.1 — Architect: evaluate and choose
 
-**The Core State Files (Present in all Tiers):**
-* **`project_state.md`**: The master ledger. It tracks the current completion percentage of the game, the active features, and the high-level roadmap. The AI reads this first to know where it is.
-* **`bugs.md` (or `bugs/master_bugs.md`)**: The central bug tracker. It is strictly formatted. If the Executor AI encounters a bug it cannot easily fix within its token limit, it writes it here for the Architect to triage later.
-* **`tweak_guide.md`**: The "Game Feel" ledger. Whenever the AI writes a script with an exposed variable (e.g., `export var player_speed = 500`), it logs that variable and file path here. You, the human, can open this file, read what variables exist, and go into the Godot Inspector to manually tweak the game feel without needing to ask the AI where the code is.
+Open your Architect agent in `Projects/<YourGame>/`.
 
-**The Advanced Tracking Files (Standard & Heavy Tiers):**
-* **`blueprints/` directory**: When the Architect designs a feature, it writes a detailed `.md` file here. The Executor reads *only* that blueprint to write the code. This prevents the Executor from getting confused by the rest of the game's documentation.
-* **`architecture_decisions.md` (ADRs)**: Used in Heavy tier. If the AI makes a major structural decision (e.g., "We are using a State Machine for the boss instead of a Behavior Tree because..."), it logs it here. If the AI ever gets confused later, it reads this file to remember *why* the codebase is structured that way.
-* **`session_log.md`**: Used in Heavy tier. A running diary of what the AI did during every session, allowing it to trace its own steps if something breaks.
+> *"What is the state and progress of the project, and what is the next task?"*
+
+It reads doctrine → design docs → state → bugs, reports a completion percentage, and presents
+**three** candidate tasks weighed by severity, unblock value, and deadline proximity. It then stops
+and waits. It will not start planning until you choose.
+
+> *"Let's go with Task 2."*
+
+### 6.2 — Architect: blueprint
+
+Now it writes the blueprint. Where depends on tier:
+
+| Tier | Blueprint path | Archive path |
+| :--- | :--- | :--- |
+| Lite | `blueprint.md` | `blueprints_archive/<timestamp>-<system>.md` |
+| Standard / Heavy | `project-state/blueprints/latest_blueprint.md` | `project-state/blueprints/archive/<timestamp>-<system>.md` |
+
+A blueprint covers one **atomic slice** — "Implement Player Jump State", not "Implement Player
+Controller" — and specifies the scene tree, the signal/state flow, the `@export` surface, and the
+mathematical *relationships*. It is explicitly forbidden from hardcoding magic numbers; every
+constant becomes an `@export` you can tune in the Inspector.
+
+If you queue several independent tasks, it will write separate blueprints and instruct each
+Executor session to work on its own git branch.
+
+It finishes with a copy-paste handoff prompt and a model/effort recommendation.
+
+It also writes `session_state.json` — the machine-readable task queue the Executor opens with —
+so the handoff survives a context clear even if you lose the chat.
+
+> The recommendation names an **effort tier** (low / medium / high), not a specific model. Map it
+> to whatever you actually have available; model names go stale far faster than these templates do.
+
+### 6.3 — Executor: implement
+
+Open your Executor agent in the same folder. Paste the Architect's prompt verbatim.
+
+**Session-start MCP health check.** Before anything else the Executor classifies the session:
+
+- **Tier 0** (always available): text edits to `.gd`, `gdformat`/`gdlint`, headless test runs.
+- **Tier 1** (needs a live MCP connection): anything touching `.tscn`/`.tres`, plus live-editor
+  introspection — `run_project`, `game_screenshot`, `game_eval`, `read_scene`.
+
+If Tier 1 is down it does **not** stop. It runs Tier 0 work and defers Tier 1 tasks, walking you
+through remediation (build the server → check `machine_paths.json` → check Node → check `.mcp.json`
+→ set `GODOT_PATH` → restart).
+
+**Rules it operates under:**
+
+- **Anti-hallucination pre-fetch.** Before editing any `.gd` that references scene nodes, it must
+  `read_scene` the companion `.tscn`. No guessed `@onready` paths.
+- **No raw `mv`/`rm` on Godot resources.** Ever, including as a workaround when MCP is down.
+- **Strict GDScript 4 typing.** Explicit types, explicit return types, and a `##` doc comment above
+  every `@export` var — Godot renders it as the Inspector tooltip.
+- **Guardrails.** A file containing `# @GUARDRAIL: LEAVE THIS ALONE` is off limits unless you
+  explicitly override. Add that comment to your own fragile core files.
+- **The Feel Gap.** *The Executor may not wire a new mechanic or VFX directly into your main game.*
+  It builds an isolated `test_<feature>.tscn`, hands it to you to playtest, and tunes from your
+  feedback before integration. Expect this — it is deliberate, because an AI can tell you code
+  compiles but not whether a jump feels good.
+- **Tests are a gate.** Any new public function or signal on a system being marked `Wired-in` or
+  higher needs a test case in `tests/test_<system>.gd` before it can reach `Verified-in-game`.
+- **Reuse first.** Before writing anything new it is required to scout the shared libraries via
+  `global-index/README.md`. (See [Section 10](#10-the-shared-libraries) for the current state of
+  those.)
+
+**Implementation status is tri-state**, and it is about *integration*, not correctness:
+
+| Status | Meaning |
+| :--- | :--- |
+| `Coded` | The script exists and compiles. |
+| `Wired-in` | It is connected into the scene tree / signal graph. |
+| `Verified-in-game` | You have played it and confirmed it works. Requires a passing test. |
+
+A `Verified-in-game` feature can still carry an open bug. Bugs are tracked separately and never by
+downgrading this status.
+
+### 6.4 — Playtest and tweak
+
+Open the project in Godot and press Play (or let the Executor drive it via `run_project` +
+`game_screenshot`).
+
+> *"The player moves too slow. Raise the speed, and log the adjustment in the tweak guide."*
+
+### 6.5 — Close the loop: the adversarial audit
+
+**Do not skip this.** Once the Executor marks something `Verified-in-game`, go back to the
+Architect:
+
+> *"Run the Phase 5 adversarial audit on the last task."*
+
+It diffs the archived blueprint against the code that actually landed, looking for silently dropped
+math, missing edge cases, and weakened typing — and files bugs for what it finds. This is the step
+that catches an Executor quietly simplifying a spec, and it is the reason the blueprint archive
+exists.
+
+### 6.6 — Verification commands
+
+```bash
+gdformat .
+```
+
+```bash
+gdlint .
+```
+
+```bash
+godot --headless --script res://tests/run_tests.gd
+```
+
+`run_tests.gd` auto-discovers every `res://tests/test_*.gd`, instantiates it, and runs every
+`test_`-prefixed method. Test files `extends TestCase` and get `assert_true`, `assert_eq`, and
+`assert_almost_eq`. Both files are copied into your project by SETUP.
 
 ---
 
-## 📖 The Playbook Directory (Command Reference)
+## 7. Anatomy of a generated project
 
-The framework is driven by "Playbooks" located in `docs/templates/` and `framework_tools/`. Think of these as magic spells you can cast by simply telling the AI to run them.
+```
+Projects/FarmRogue/
+├── project.godot              # you create this in the Godot editor
+├── icon.svg
+├── .mcp.json                  # Godot + context7 MCP wiring
+├── .agents/mcp_config.json    #   (same content, for agents that read this location)
+├── ARCHITECT.md               # planner rules      ─┐
+├── EXECUTOR.md                # implementer rules   ├─ synced from docs/templates/
+├── SOLO-AGENT.md              # single-agent rules ─┘
+├── CLAUDE.md / AGENTS.md      # YOU create these — see Section 4
+├── README.md                  # auto-maintained: Working / In Progress / Known Issues
+├── design_docs/               # YOUR GDD lives here. Exact folder name required.
+├── markdowns4AI/              # all non-root governance docs
+│   ├── PROJECT-PROFILE.md     #   you fill in — tier lives here
+│   ├── DOCTRINE.md            #   you fill in — your non-negotiables
+│   ├── ASSET-STANDARDS.md     #   .import config rules
+│   ├── HARVEST-REPO.md        #   extract-to-shared-library playbook
+│   ├── MCP-SWITCH.md          #   swap MCP servers
+│   ├── UPGRADE-TIER.md        #   tier migration
+│   ├── REMOVE-SYSTEM.md       #   safe system retirement
+│   ├── DESIGN-DRIFT.md        #   (Standard & Heavy only)
+│   └── ORGANIZE.md            #   (Heavy only)
+├── tests/
+│   ├── run_tests.gd           # headless runner
+│   ├── test_case.gd           # TestCase base class
+│   └── test_<system>.gd       # written by the Executor
+└── <tier-specific state — see below>
+```
 
-| Playbook / Template | What it does | Where to call it | Which Agent |
-| :--- | :--- | :--- | :--- |
-| **`SETUP.md`** | Consumes your GDD, selects a tier, scaffolds the Godot project, and inits Git. | Root Directory | Architect |
-| **`ARCHITECT.md`** | The core rulebook governing how your planning AI creates blueprints and tracks bugs. | Automatically read | Architect |
-| **`EXECUTOR.md`** | The core rulebook governing how your coding AI safely edits Godot scenes via MCP. | Automatically read | Executor |
-| **`SOLO-AGENT.md`** | A unified rulebook for users who only use a single AI (like Cursor) for both planning and coding. | Automatically read | Solo Agent |
-| **`HARVEST-REPO.md`** | Extracts a cool system from your game, makes it agnostic, and saves it to global `mechanics/`. | Project Directory | Architect |
-| **`UPGRADE-TIER.md`** | Upgrades a Lite game to a Standard/Heavy game by automatically restructuring its folders. | Project Directory | Architect |
-| **`DESIGN-DRIFT.md`** | Audits your game's codebase against your GDD and highlights where you went off track. | Project Directory | Architect |
-| **`REMOVE-SYSTEM.md`** | Safely unhooks and deletes a bloated or broken feature without corrupting the rest of the game. | Project Directory | Executor |
-| **`ORGANIZE.md`** | Cleans up messy folders, deletes orphaned files, and standardizes naming conventions. | Project Directory | Executor |
-| **`sync_templates.py`** | A python script that pushes your custom rule updates to every single game you own. | Root Directory | Terminal |
+### The tracking files, and what each is for
+
+**`project_state.md` / `project-state/_overview.md`** — the master ledger. Completion percentage,
+active features and their tri-state status, the Script Registry, the roadmap. Read first, every
+session.
+
+**`bugs.md` / `bugs/master_bugs.md` / `bugs/<system>/<system>.md`** — the bug tracker. Status moves
+`reported → investigating → resolved` (Heavy adds a fourth, `verified`, meaning confirmed fixed
+in-game rather than merely in the diff). Severity is revised as information arrives, not fixed at
+intake. When the Executor hits something it can't cheaply fix, it files here rather than derailing.
+
+**`tweak_guide.md`** — the game-feel ledger, and the file most worth knowing about. Every
+hand-tunable `@export` var and tuning `const`, grouped by system, in a table: variable, file,
+kind, default, what it does in plain language, and safe range. Deliberately excludes internal
+state and safety epsilons — it is a table of *knobs*, not internals. Keeping it current is
+non-skippable: any task that adds, renames, or re-defaults a tunable updates its row in the same
+task. This is how you retune your game without asking an AI where anything lives.
+
+**`blueprints/`** — Architect output, one atomic slice at a time. Archived on use so the Phase 5
+audit has something to diff against.
+
+**`architecture_decisions.md` (Heavy)** — an ADR log. *Why* the boss uses a state machine instead
+of a behavior tree. Prevents a future session from "helpfully" undoing a deliberate decision.
+
+**`session_log.md` (Heavy)** — append-only, one line per session:
+`YYYY-MM-DD HH:MM | agent=… | phase=… | target_system=… | outcome=…`. Cheap protocol-drift
+detection after the fact.
+
+**`project-state/archived_systems/`** — where `REMOVE-SYSTEM.md` parks retired systems instead of
+deleting them, so reinstating one is a copy-back rather than an archaeology project.
+
+### `session_state.json` — the execution payload
+
+The Architect writes this in its Phase 4, and it is the first file the Executor reads. It is the
+durable half of the handoff: the copy-paste prompt carries the task into a new chat, and this file
+carries it across a context clear.
+
+```json
+{
+  "status": "queued",
+  "target_system": "player_controller",
+  "blueprint_used": "project-state/blueprints/latest_blueprint.md",
+  "branch": null,
+  "steps": ["Implement the jump state per the blueprint"]
+}
+```
+
+`status` moves `queued` → `COMPLETED`. `blueprint_used` is a path or `null`; if it is a path, the
+Executor reads that blueprint before starting, and archives it when the task completes.
+`branch` is set only when the Architect batches parallel tasks onto separate git branches.
+
+If the file is missing but you pasted a handoff prompt, the Executor treats the prompt as
+authoritative and writes the payload itself before starting. If there is neither, it reports that
+there is no queued work rather than inventing a task.
 
 ---
 
-## 🔧 Customizing AI Behavior
+## 8. The scale tiers
 
-If the AI makes a mistake that annoys you, **do not correct it in chat**. Open `docs/templates/common/EXECUTOR.md`, add a rule saying *"Never do X again"*, and run the Python sync script at the root. Your AI will instantly learn that lesson for every game you ever build. Happy devving!
+Bureaucracy should match scope. Twenty architecture documents for a Flappy Bird clone is wasted
+tokens; three files for a 40-hour RPG guarantees hallucination.
+
+### Lite — jams, prototypes, tiny scopes
+
+Zero folder clutter. Three files at the project root: `project_state.md`, `bugs.md`,
+`tweak_guide.md`. Blueprint at `blueprint.md`. The agent reads all state instantly.
+
+Playbooks: `REMOVE-SYSTEM.md` (delete, no archive).
+
+### Standard — most indie games
+
+State moves into `project-state/` and `bugs/`. Adds `project-state/blueprints/` with an archive,
+and per-system state files (`project-state/<system>/<system>.md`) so the Architect can deep-dive
+one system without loading the rest.
+
+Playbooks: Standard's `REMOVE-SYSTEM.md` (archive, don't delete) + `DESIGN-DRIFT.md`.
+
+### Heavy — systems-heavy or multi-year projects
+
+Everything Standard has, plus per-system **bug** files (`bugs/<system>/<system>.md` rolled up into
+`bugs/_overview.md`), a 4-state bug lifecycle, `architecture_decisions.md`, `session_log.md`, and
+a **Last Verified Commit** marker advanced only after a passing headless run.
+
+Playbooks: Heavy's `REMOVE-SYSTEM.md` + `DESIGN-DRIFT.md` + `ORGANIZE.md`.
+
+The payoff is strict context isolation: working on inventory, the agent is forbidden from reading
+combat documentation.
+
+### Changing tier later
+
+The Architect checks scope against tier at the start of every session and will offer an upgrade if
+you have outgrown it. Or ask directly:
+
+> *"Run the UPGRADE-TIER playbook. Take this project from Lite to Standard."*
+
+It updates the tier string in `PROJECT-PROFILE.md`, syncs the new governance files, physically
+migrates and splits the state files, and deletes the stranded originals.
+
+> The playbook covers Lite → Standard, Standard → Heavy, and Lite → Heavy (which runs the first
+> two in sequence). It commits first, migrates your `tweak_guide.md` across **as-is** rather than
+> regenerating it, and only deletes the old root files once their content has landed in the new
+> locations.
+
+---
+
+## 9. Playbook reference
+
+Playbooks are markdown procedures you invoke by telling the AI to run them.
+
+| Playbook | What it does | Run from | Agent | Tiers |
+| :--- | :--- | :--- | :--- | :--- |
+| `SETUP-FRAMEWORK.md` | One-time framework install: build MCP, install deps, map Godot path. | repo root | Director | — |
+| `docs/templates/SETUP.md` | Reads your GDD, picks a tier, bootstraps `project.godot`/git/`design_docs/`, scaffolds all project docs and your agent pointer file, enforces strict typing. | repo root | Director / Architect | all |
+| `ARCHITECT.md` | The planner rulebook: triage → 3 tasks → blueprint → payload + handoff → audit. | project | Architect | all |
+| `EXECUTOR.md` | The implementer rulebook: MCP health, typing, tests, doc consistency. | project | Executor | all |
+| `SOLO-AGENT.md` | Both role sets in one document, for single-agent setups, with rules that keep planning and execution separated. | project | Solo | all |
+| `HARVEST-REPO.md` | Sweeps your game for reusable systems, makes them agnostic, files them in the shared libraries. | project | Architect → Executor | all |
+| `UPGRADE-TIER.md` | Migrates a project up a tier, restructuring and splitting state files. | project | Architect | all |
+| `SYNC-TEMPLATES.md` | The AI-driven equivalent of `sync_templates.py`: compare project docs to the global templates and replace stale ones. | repo root | Director | all |
+| `MCP-SWITCH.md` | Remaps every `mcp__<server>__*` reference when you change MCP servers, flagging capabilities with no equivalent. | project | Executor | all |
+| `ASSET-STANDARDS.md` | Rules for hand-editing `.import` files so pixel art stays crisp and `.glb` files get colliders. | project | Executor | all |
+| `DESIGN-DRIFT.md` | Read-only audit: where the code and the design docs disagree. Never auto-resolves — you pick the fix direction per item. | project | Architect | Std, Heavy |
+| `REMOVE-SYSTEM.md` | Retires a whole system: full scope trace, mandatory dry-run diff, archive-don't-delete, reinstatement path. | project | Executor | all |
+| `ORGANIZE.md` | Proposes folder/naming cleanups as a numbered list behind an approval gate; routes every move through MCP. | project | Executor | Heavy |
+
+**`REMOVE-SYSTEM.md` deserves a callout.** Deleting a system by hand is how you get dangling
+`class_name` references and orphaned autoloads. This playbook traces every touchpoint — scenes,
+autoloads, input map actions, collision layers, tests, state docs, tweak_guide rows, Script
+Registry entries, plus a codebase-wide grep for the system's identifiers — then shows you the full
+diff and waits for approval before touching anything.
+
+---
+
+## 10. The shared libraries
+
+The framework's "extreme reuse mandate" says: before writing any new mechanic, start at
+`global-index/README.md`, route to the right dimension-specific feature file (2D / 3D / Agnostic),
+and reuse or adapt rather than build. You do not need a perfect match — recolor the fire explosion
+into toxic gas, turn the dash into a dodge roll.
+
+| Library | Purpose |
+| :--- | :--- |
+| `global-index/` | The routing layer, generated from the libraries below. Feature files appear under `2D/`, `3D/`, `Agnostic/` as content classifies into them. Always the entry point — never scan the libraries blind. |
+| `mechanics/` | Reusable `.gd` scripts, one folder per category, each with a companion `.md` explaining dependencies and wiring. |
+| `scenes/` | Reusable `.tscn` / `.tres` structures. |
+| `assets/` | Raw assets: `models/` (with `building_pieces/`, `characters/`, `environment_assets/`, `props/` beneath it), `music/`, `sfx/`, `vfx/`. |
+| `godot-4-snippets-bible/` | Godot 4 API reference and a running log of corrected syntax hallucinations. |
+
+### Current state — read this before relying on any of it
+
+**The libraries ship empty.** `mechanics/`, `scenes/`, and `assets/` contain only their READMEs
+and placeholder category folders. Nothing is pre-filled; they grow from your own projects.
+
+**The index tells agents this, and it is generated rather than hand-maintained.**
+`global-index/README.md` is built from the libraries' actual contents by
+`framework_tools/build_global_index.py`. Feature files (`global-index/3D/vfx_explosions.md` and
+friends) are created the first time something classifies into them, so there are no stub files and
+no links that resolve to nothing. When the libraries are empty the index says so plainly, and the
+templates instruct agents to note it once and build from scratch rather than spending further
+calls hunting for reuse.
+
+> **What changed:** the index previously listed ~1,196 entries behind 1,185 absolute
+> `file:///C:/Godot_AI_Framework/...` links to the original author's drive — 1,102 of them
+> pointing at `effect-blocks/` and `poly-blocks/`, two asset packs not included in this
+> distribution. Only 48 of those entries carried a hand-written description; the rest were
+> generated filename listings. The 48 descriptions are preserved in
+> [`global-index/_ARCHIVED-ENTRY-NOTES.md`](global-index/_ARCHIVED-ENTRY-NOTES.md) as a wishlist,
+> and the index is now generated so it cannot drift from reality again.
+
+**Regenerating the index:**
+
+```bash
+python framework_tools/build_global_index.py
+```
+
+`--dry-run` reports without writing; `--check` exits non-zero if the index has drifted, which
+makes it usable as a pre-commit or CI guard. `HARVEST-REPO.md` runs it automatically as its
+Phase 2 step 4.
+
+**Steering classification.** The generator infers a feature area from the category folder and a
+dimension from the code (`Vector2`/`Node2D` versus `Vector3`/`Node3D`; both or neither means
+Agnostic), reading `.tscn` node types as well as `.gd`. Override either with an HTML comment in
+the entry's companion `.md`:
+
+```markdown
+<!-- index: vfx_explosions -->
+<!-- dimension: 3D -->
+```
+
+Never edit a generated file — change the companion doc and regenerate.
+
+**The snippets bible is 12 lines** — three API notes (`move_and_slide`, tweens, navigation) and an
+empty correction log. It is a seed, not a reference. Its real value is the logging directive: when
+you correct an AI's Godot 3-ism, it appends the correct syntax so the mistake does not recur.
+
+### Filling the libraries: HARVEST-REPO
+
+This is how the libraries are meant to grow. After you build something good:
+
+> *"Run the HARVEST-REPO protocol."*
+
+1. **Sweep** — scan `scripts/`, `scenes/`, `shaders/` for things not deeply coupled to this game.
+2. **Anti-duplication** — cross-reference against the existing libraries, opening and *reading*
+   anything that sounds even vaguely similar rather than trusting filenames. If yours is better,
+   refactor the global version instead of adding a near-duplicate.
+3. **Plan** — a `harvest_plan.md` listing what moves where and what needs generalizing.
+4. **Extract** — *copy*, never move. Strip hardcoded `res://` paths and game-specific singletons,
+   replacing them with `@export`s and signals.
+5. **Document** — a companion `.md` beside every extracted file: what it does, dependencies,
+   required autoloads and project settings, step-by-step wiring, source project, known gotchas.
+   UI is always extracted as a **pair** — scene into `scenes/ui/`, script into `mechanics/ui/` —
+   with each companion doc cross-linking the other.
+6. **Index** — run `python framework_tools/build_global_index.py`, verify with `--check`, then
+   log the harvest. If an entry landed in the wrong dimension or feature area, fix the markers in
+   its companion `.md` and regenerate rather than editing the generated file.
+
+---
+
+## 11. Procedural 3D modeling
+
+`model-generation/` wraps [`antics-modelkit`](https://www.npmjs.com/package/antics-modelkit). The AI
+does not hallucinate binary meshes — it writes a **JavaScript recipe** that constructs the model
+mathematically, which means iteration is a parameter change rather than a regeneration.
+
+Full documentation lives in [`model-generation/README.md`](model-generation/README.md); the
+agent-facing workflow and technique rules are in `model-generation/AGENTS.md`.
+
+### Setup
+
+```bash
+cd model-generation && npm install
+```
+
+That also unpacks the kit's own 52 KB technique guide at
+`model-generation/node_modules/antics-modelkit/AGENTS.md`, which the agent is required to read
+before writing a recipe. It is the most useful file in that workspace.
+
+### The loop
+
+1. Open an AI terminal in `model-generation/` and drop in a reference image.
+2. The agent runs the kit's **Phase 0 thinking path** — what am I making, what category
+   (`prop` / `plant` / `character` / `structure` / `building` / `vehicle` / `terrain`), which
+   palette, flat colour or textured — then presents the plan and waits for your approval.
+3. It writes the recipe into `models.mjs` (or a per-model file) using the kit's verbs — `sweep`,
+   `lathe`, `extrude`, `patch`, `contour`, `merge`, `weld`, `mirror`, `twist`, `taper`, `bend`,
+   `sit`, `mottle` — sizing everything against `PROPORTIONS.character`.
+4. Build:
+
+```bash
+npm run build
+```
+
+`build.js` discovers every `*.mjs` recipe (and every one a level down inside a model folder),
+runs the kit's validation gate on each, **dequantizes** the output — Godot does not read the
+kit's quantized `.glb` correctly, so this is not optional — and copies the result into `tester/`.
+`npm run list` shows what it found without building; `-- --only=<name>` targets one recipe or one
+model; `--no-tester` skips the copy.
+
+### Looking at it
+
+Open `model-generation/tester/project.godot` in Godot and press Play. It loads every `.glb` beside
+it: left-drag orbits, right-drag pans, wheel zooms, `←`/`→` switch models, `F` frames, `W`
+toggles wireframe, `R` reloads after a rebuild.
+
+A translucent capsule exactly one character height tall stands beside the model on a 1-metre
+grid. **Check every model against it.** Scale is the most common failure and the one an AI
+genuinely cannot see — the same Feel Gap problem as gameplay, in a different medium.
+
+Iterate by editing the recipe, never by regenerating:
+
+> *"Make the hilt 20% wider and give the blade a faint blue emissive."*
+
+### Promoting a model to the shared library
+
+Once approved, move it into a group folder (`general/<name>/`, or one per game) holding the
+recipe, the `.glb`, and the reference images. If it is broadly reusable, also copy the `.glb` to
+`assets/models/<category>/` and regenerate the index:
+
+```bash
+python framework_tools/build_global_index.py
+```
+
+### Use your strongest model here
+
+3D spatial reasoning is the hardest thing in this repository — harder than the GDScript work —
+and the failure mode is a mesh that builds cleanly, passes the gate, and still looks wrong. The
+kit's guide catalogues the traps in detail: reversed windings are *invisible* rather than
+wrong-looking, `weld()` before any topological operation, Z-fighting on flush surfaces, origin
+placement for Godot pivots, `mottle()` exploding triangle counts on dense meshes.
+
+## 12. framework_tools
+
+Three maintained tools live here. The eleven one-off migration scripts that used to sit beside
+them have been moved to `framework_tools/_archive/` — see that folder's README for why none of
+them should ever be run.
+
+### The three you use
+
+**`sync_templates.py`** — the full push. Reads each project's tier from
+`markdowns4AI/PROJECT-PROFILE.md`, then copies every common + tier template into it.
+
+```bash
+python framework_tools/sync_templates.py
+```
+
+**`sync_tiers.py`** — tier files only. Use this after a tier upgrade, or when you have changed a
+tier's rules and do not want the common templates re-copied.
+
+```bash
+python framework_tools/sync_tiers.py
+```
+
+**`build_global_index.py`** — regenerates `global-index/` from the actual contents of
+`mechanics/`, `scenes/`, and `assets/`. Run it after harvesting anything into the shared
+libraries; `HARVEST-REPO.md` runs it for you.
+
+```bash
+python framework_tools/build_global_index.py
+```
+
+It also takes `--dry-run`, and `--check` (exit 1 if the index has drifted — useful as a
+pre-commit or CI guard). See [Section 10](#current-state--read-this-before-relying-on-any-of-it)
+for how entries get classified.
+
+The two sync scripts accept the same flags:
+
+| Flag | Effect |
+| :--- | :--- |
+| `--dry-run` | Print every change without writing anything. Worth running first. |
+| `--project NAME` | Sync one project under `Projects/` instead of all of them. |
+| `--prune` | (`sync_templates.py` only) Also delete copies of template files found outside their canonical path. |
+
+Both only touch directories under `Projects/` that contain a `project.godot`. Games kept elsewhere
+are silently skipped.
+
+**What they will never overwrite:**
+
+- `DOCTRINE.md` and `PROJECT-PROFILE.md` — project-owned, excluded entirely.
+- `tweak_guide.md` and `architecture_decisions.md` — *seed* files. They are written only when
+  missing. Once your project has content in them, the scripts report `Preserved` and move on.
+- `project-state/`, `bugs/`, `design_docs/`, and your `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` pointer
+  files — not in the template set at all.
+
+Files whose content already matches are reported as unchanged rather than rewritten, so a repeat
+run is a no-op. Misplaced copies are reported but **not** deleted unless you pass `--prune`.
+
+```bash
+python framework_tools/sync_templates.py --dry-run
+```
+
+### The eleven you don't
+
+`framework_tools/_archive/` holds `rename.py`, `populate_profiles.py`, `update_profile.py`,
+`update_architect.py`, `update_executor.py`, `update_executor_final.py`, `update_handoff.py`,
+`update_models.py`, `update_models_final.py`, `check_handoff.py`, and `check_phase4.py`.
+
+They are one-off scripts from this repo's own refactors, kept as a record and nothing more:
+
+- `update_architect.py` and `update_models.py` contain `ros.path.join` — a typo that raises
+  `NameError` immediately. They cannot run at all.
+- `check_handoff.py`, `check_phase4.py`, `update_handoff.py`, and `update_profile.py` hardcode
+  `c:\Godot_AI_Framework\docs	emplates	iers`; `update_executor.py` hardcodes
+  `c:/Godot_Projects/`. No-ops on your machine — or worse, if you happen to have those paths.
+- `rename.py` rewrites strings repo-wide and renames top-level directories. Running it today
+  would corrupt the tree.
+- `populate_profiles.py` writes a hardcoded profile for a nonexistent `Example_Project` to the
+  wrong location.
+
+`update_profile.py` is the one worth reading: it is what introduced the duplicated step 2 and the
+`1, 2, 2, 4, 4, 5…` numbering in every shipped `ARCHITECT.md`. That damage is now repaired, and
+the Project Profile read it was trying to add is a real step 3.
+
+---
+
+## 13. Customizing AI behavior
+
+**The core idea: when the AI does something that annoys you, do not correct it in chat.** Chat
+corrections evaporate at the end of the session. Edit the rule, sync it, and every project you own
+learns the lesson permanently.
+
+```
+docs/templates/common/     →  shared by every tier (ASSET-STANDARDS, DOCTRINE, HARVEST-REPO,
+                              MCP-SWITCH, PROJECT-PROFILE, SYNC-TEMPLATES, UPGRADE-TIER,
+                              tweak_guide, tests/, mcp_config.json)
+docs/templates/tiers/*/    →  per-tier ARCHITECT / EXECUTOR / SOLO-AGENT + tier-specific playbooks
+```
+
+Workflow:
+
+1. Decide the scope. A rule for everyone → `common/`. A rule only Heavy projects need →
+   `tiers/heavy/`. A rule for one game only → that project's `markdowns4AI/DOCTRINE.md`.
+2. Edit the template. Be specific and imperative — *"Never use `get_node()` with a string literal;
+   always use `@onready` with `%UniqueName`."*
+3. Push it: `python framework_tools/sync_templates.py --dry-run` to preview, then the same
+   command without the flag. Or ask the Director to run the `SYNC-TEMPLATES.md` playbook, which
+   walks the same changes but shows you each one for approval first.
+4. Restart any open agent session so it re-reads the file.
+
+**What `sync_templates.py` will never overwrite:** `DOCTRINE.md` and `PROJECT-PROFILE.md` are
+excluded because they are yours; `tweak_guide.md` and `architecture_decisions.md` are written only
+when missing; and `project-state/`, `bugs/`, and `design_docs/` are not in the template set at all.
+
+You can also edit the framework itself from the Director:
+
+> *"Update the EXECUTOR template so the AI adds a header comment to every script it writes, then
+> sync it to all my games."*
+
+---
+
+## 14. Troubleshooting
+
+**The agent says the `mcp__godot__*` tools don't exist.**
+The server isn't built. `cd docs/tools/godot-mcp && npm install && npm run build`, then fully
+restart the agent — the MCP server list is read once at process start.
+
+**Tools exist but `get_godot_version` fails.**
+The server can't find Godot. Set `GODOT_PATH` to the absolute path of the executable and restart
+the agent. This is required for Steam installs specifically: the server's auto-detection does not
+scan Steam library folders on Windows or Linux. Verify the variable landed by reading it in a
+*fresh* shell — the one you ran `setx` in won't show it.
+
+**I set `GODOT_PATH` and it still fails.** Run this in a *new* PowerShell window:
+
+```bash
+powershell -Command "[System.Environment]::GetEnvironmentVariable('GODOT_PATH','User')"
+```
+
+If that's empty, the `setx` didn't take. If it's correct, the agent wasn't fully restarted — quit
+the whole application, not just the session.
+
+**The Executor says there's no queued work / `status: idle`.**
+The Architect never wrote a payload — usually because you jumped straight to the Executor. Run the
+Architect first, or just paste a task description: the Executor treats a pasted handoff prompt as
+authoritative and writes the payload itself. See [Section 7](#session_statejson--the-execution-payload).
+
+**The agent ignores `ARCHITECT.md` / `EXECUTOR.md`.**
+No agent auto-loads those filenames. Create the pointer file your agent actually reads —
+[Section 4](#4-connecting-your-ai-agent).
+
+**The Architect can't find my design docs.**
+They must be `.md` files inside `design_docs/` at the project root. Every template globs
+`./design_docs/*.md`.
+
+**My game doesn't show up in `git status`.**
+By design. The root `.gitignore` excludes every top-level directory and every subdirectory of
+`Projects/`, because each game is meant to be its own independent repository. Run `git init` inside
+your game's folder and push it to its own remote. The framework repo tracks the framework; your
+game repo tracks your game.
+
+**`gdformat` / `gdlint` not found.**
+`pip install gdtoolkit`, and make sure your Python scripts directory is on PATH.
+
+**`npm run build` fails in `model-generation/`.**
+Usually dependencies: run `npm install` in that folder first. If it reports *"Nothing to build:
+no recipe exports a model function yet"*, that is not an error — add an
+`export function myProp() { ... }` to `models.mjs`. `npm run list` shows what it discovered.
+
+**The model loads in `tester/` but looks the wrong size.**
+Compare it against the translucent capsule — that is exactly one character height. The modelkit
+sizes everything in character heights, so a prop built "about a metre" next to a character built
+"about two" is the commonest error there is. Fix it by deriving the dimension from
+`PROPORTIONS`, not by scaling the mesh afterwards.
+
+**The agent keeps building `test_something.tscn` instead of putting the feature in my game.**
+Working as intended — the Feel Gap rule. Playtest the isolated scene, give feedback, and it will
+integrate after you approve the feel.
+
+**The agent recommends an effort level rather than a model.**
+Intentional. The templates deliberately say "mid-tier model at medium reasoning effort" instead of
+naming products, because model names go stale much faster than these rules do. Map the tier to
+whatever you have.
+
+---
+## Known limitations & rough edges
+
+Everything below is a real, verified gap in the repository as published. None of it is fatal, but
+knowing it up front saves you a confusing afternoon.
+
+**Already repaired:** the governance templates (duplicated step numbering, find/replace damage,
+broken cross-references), the missing handoff payload, the `sync_templates.py` data-loss bug, the
+incoherent solo-agent document, the `SETUP` playbook's missing project bootstrap, the 1,185 dead
+index links, the eleven landmine scripts in `framework_tools/`, the missing LICENSE, and the
+`model-generation/` workspace — which was not merely broken but **entirely untracked by git**,
+its own `.gitignore` having excluded `build.js`, `models.mjs`, `package.json`, and `AGENTS.md`
+from every clone. What remains is content: the shared libraries are empty until you fill them.
+
+### A. The shared libraries are empty
+`mechanics/`, `scenes/`, and `assets/` ship with READMEs and placeholder folders but no entries.
+The reuse mandate that opens every planning session therefore finds nothing on a fresh clone.
+
+This is now *honest* rather than broken — the generated index says plainly that it is empty, and
+the templates tell agents to note it once and build from scratch instead of hunting. But you do
+not get the reuse the design promises until you populate the libraries yourself, which is what
+`HARVEST-REPO.md` is for.
+
+`godot-4-snippets-bible/godot_4_snippets.md` is likewise a 12-line seed: three API notes and an
+empty correction log.
+
+### B. Packaging and setup
+- `.gitmodules` declares `docs/tools/godot-mcp` a submodule; the source is actually vendored as
+  ordinary tracked files, so `git submodule update --init --recursive` is a no-op. The `SETUP`
+  playbook now says so, but the `.gitmodules` file itself is still misleading and should be
+  removed or made real.
+- `docs/tools/godot-mcp/build/` is gitignored by that project's own `.gitignore`, so a fresh clone
+  has no compiled server until you build it.
+- `mcp_config.json` does not inject `GODOT_PATH`, so `machine_paths.json` is only ever read by an
+  agent by hand — it never reaches the MCP server automatically. Setting the environment variable
+  and fully restarting the agent remains a manual step.
+- `machine_paths.json` ships with a `YOUR_COMPUTER_NAME_HERE` placeholder and a Godot **4.3** Steam
+  path, while the framework targets 4.4+.
+- `.gitignore` whitelists `/new_project_design_docs/`, which does not exist, and
+  `/Projects/Example_Project/`, which exists only as an empty directory.
+- There is no root `.mcp.json`, so the Director has no Godot tools. That is intentional — MCP is
+  configured per project — but worth knowing before you try scene work from the root.
+
+### C. Cross-agent portability
+The templates phrase code review and security review agent-neutrally, but `/code-review` and
+`/security-review` are still named as examples because they exist in Claude Code. On Codex or
+Gemini, do the equivalent pass manually.
+
+### D. Tier feature availability is deliberately uneven
+`ORGANIZE.md` ships only in Heavy. `DESIGN-DRIFT.md` only in Standard and Heavy.
+`architecture_decisions.md` and `session_log.md` only in Heavy. Lite's `REMOVE-SYSTEM.md` deletes
+rather than archives, and Lite has a 3-state bug lifecycle where Heavy has 4. This is by design —
+less bureaucracy at smaller scope — but it means a playbook you read about may not be in your
+project.
+
+---
+
+## Repository layout
+
+```
+Godot_AI_Framework_Public/
+├── README.md                     # this file
+├── LICENSE                       # MIT, plus third-party component notices
+├── SETUP-FRAMEWORK.md            # one-time install playbook
+├── ARCHITECT.md                  # Director rules for an agent opened at the repo root
+├── .gitignore                    # ignores every game project (each gets its own repo)
+├── .gitmodules                   # declares a submodule that is actually vendored
+│
+├── Projects/                     # your games live here (gitignored, one repo each)
+│
+├── docs/
+│   ├── machine_paths.json        # per-machine Godot/Node paths, keyed by hostname
+│   ├── templates/
+│   │   ├── SETUP.md              # project scaffolding playbook
+│   │   ├── common/               # tier-independent templates + tests/ + mcp_config.json
+│   │   └── tiers/{lite,standard,heavy}/
+│   └── tools/godot-mcp/          # vendored MCP server (build/ is gitignored — you must build it)
+│
+├── framework_tools/              # 3 maintained tools
+│   └── _archive/                 #   11 historical one-offs — never run these
+├── global-index/                 # GENERATED routing index; feature files appear as content does
+│   └── _ARCHIVED-ENTRY-NOTES.md  #   48 curated descriptions from the old hand-written index
+├── mechanics/                    # shared scripts (currently empty)
+├── scenes/                       # shared scenes (currently empty)
+├── assets/{models,music,sfx,vfx}/  # shared raw assets (currently empty)
+├── godot-4-snippets-bible/       # Godot 4 API notes + hallucination correction log
+└── model-generation/             # antics-modelkit procedural 3D workspace
+    ├── models.mjs                #   recipes; ships with one worked example
+    ├── build.js                  #   discover -> gate -> dequantize -> copy to tester/
+    └── tester/                   #   Godot project that loads and orbits every built .glb
+```
+
+---
+
+## Credits & licensing
+
+**Godot MCP server** — this repository vendors
+[tugcantopaloglu/godot-mcp](https://github.com/tugcantopaloglu/godot-mcp) at
+`docs/tools/godot-mcp/`, under its own MIT license (`docs/tools/godot-mcp/LICENSE`). All credit for
+that server belongs to its author.
+
+**antics-modelkit** — the procedural 3D workspace depends on the
+[`antics-modelkit`](https://www.npmjs.com/package/antics-modelkit) npm package, installed at build
+time and not vendored here.
+
+**context7** — MCP documentation server by [Upstash](https://github.com/upstash/context7), invoked
+via `npx` and not vendored here.
+
+**This framework is released under the [MIT License](LICENSE).** The vendored godot-mcp keeps its
+own MIT license and copyright notice at `docs/tools/godot-mcp/LICENSE`; the npm dependencies are
+installed at build time rather than vendored and carry their own terms. `LICENSE` lists all of
+them.
+
+---
+
+Happy devving. If you improve a rule, improve it in `docs/templates/` and sync it — that is the
+whole point.

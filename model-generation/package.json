@@ -1,0 +1,19 @@
+{
+  "name": "godot-ai-framework-model-generation",
+  "version": "1.0.0",
+  "description": "Procedural 3D model generation for the Godot AI GameDev Framework, built on antics-modelkit.",
+  "private": true,
+  "type": "commonjs",
+  "license": "ISC",
+  "scripts": {
+    "build": "node build.js",
+    "list": "node build.js --list"
+  },
+  "dependencies": {
+    "antics-modelkit": "^0.11.3",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.4.2"
+  }
+}

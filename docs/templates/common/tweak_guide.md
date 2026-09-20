@@ -11,8 +11,8 @@ re-explain) the surrounding script.
   edited are left out on purpose — this file is for knobs, not internals.
 - Grouped by system, matching the system names already used in `project-state/_overview.md` and
   `project-state/[system].md`.
-- Kept current by Claude Code as part of every task's documentation-consistency check (see
-  `CLAUDE.md` step 9) — if a task adds, removes, renames, or changes the default of a tunable,
+- Kept current by the Executor Agent as part of every task's documentation-consistency check
+  (see `EXECUTOR.md`'s task-completion step) — if a task adds, removes, renames, or changes the default of a tunable,
   this file is updated in the same task, regardless of whether the task is otherwise "trivial."
   An entry that no longer matches the code is a bug, same as any other stale doc.
 - Not a substitute for the Godot Inspector — for `@export` vars, the Inspector is still the

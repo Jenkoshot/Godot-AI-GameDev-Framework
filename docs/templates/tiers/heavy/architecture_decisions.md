@@ -2,7 +2,7 @@
 
 This file tracks the "Why" behind major architectural decisions to prevent AI agents from losing context, undoing complex work, or hallucinating different systems in future sessions.
 
-Claude Code should log a new entry here at the end of any complex task.
+The Executor Agent logs a new entry here at the end of any complex task.
 
 ### Example Entry:
 **Date**: 2026-08-01

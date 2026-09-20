@@ -1,5 +1,19 @@
-*
-!.gitignore
-!GEMINI.md
-!.agents/
-!.agents/**
+# Dependencies
+node_modules/
+
+# Build output - regenerate with `npm run build`
+dist/
+
+# Godot's import cache inside the inspection project
+tester/.godot/
+tester/*.glb
+tester/*.import
+
+# Reference images you drop in for the agent to analyse. Local scratch, not shared -
+# but keep the folder itself (and its README) in the repo so it exists on a fresh clone.
+reference_input/*
+!reference_input/README.md
+
+# OS noise
+.DS_Store
+Thumbs.db
