@@ -98,6 +98,22 @@ This folder uses the `antics.gg` procedural modelkit. The AI doesn't hallucinate
 
 ---
 
+## 🗂️ The Anatomy of a Game Project (Tracking Files)
+
+If you are wondering exactly how the AI keeps track of your game without reading the entire codebase every time, it uses these specific markdown files generated inside your `Projects/[YourGame]/` folder.
+
+**The Core State Files (Present in all Tiers):**
+* **`project_state.md`**: The master ledger. It tracks the current completion percentage of the game, the active features, and the high-level roadmap. The AI reads this first to know where it is.
+* **`bugs.md` (or `bugs/master_bugs.md`)**: The central bug tracker. It is strictly formatted. If the Executor AI encounters a bug it cannot easily fix within its token limit, it writes it here for the Architect to triage later.
+* **`tweak_guide.md`**: The "Game Feel" ledger. Whenever the AI writes a script with an exposed variable (e.g., `export var player_speed = 500`), it logs that variable and file path here. You, the human, can open this file, read what variables exist, and go into the Godot Inspector to manually tweak the game feel without needing to ask the AI where the code is.
+
+**The Advanced Tracking Files (Standard & Heavy Tiers):**
+* **`blueprints/` directory**: When the Architect designs a feature, it writes a detailed `.md` file here. The Executor reads *only* that blueprint to write the code. This prevents the Executor from getting confused by the rest of the game's documentation.
+* **`architecture_decisions.md` (ADRs)**: Used in Heavy tier. If the AI makes a major structural decision (e.g., "We are using a State Machine for the boss instead of a Behavior Tree because..."), it logs it here. If the AI ever gets confused later, it reads this file to remember *why* the codebase is structured that way.
+* **`session_log.md`**: Used in Heavy tier. A running diary of what the AI did during every session, allowing it to trace its own steps if something breaks.
+
+---
+
 ## 📖 The Playbook Directory (Command Reference)
 
 The framework is driven by "Playbooks" located in `docs/templates/` and `framework_tools/`. Think of these as magic spells you can cast by simply telling the AI to run them.
