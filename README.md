@@ -26,11 +26,18 @@ The AI will automatically install the Node and Python requirements, compile the 
 
 ---
 
-## 🏗️ 2. Creating a Project (Behind the Scenes)
+## 🏗️ 2. The Root Workspace (The Director)
 
-When you are ready to make a game, place your Game Design Document (GDD) at the root of the repository (e.g., `GDD.md`). Then, open your AI at the root and say: *"Run the SETUP playbook based on my GDD."*
+When your AI is running at the **root of the repository**, it acts as the Director. This is where you brainstorm ideas, create new games, and manage the overall workflow. 
 
-**Here is exactly what the AI does automatically:**
+**Demo Prompts (Run at the Root):**
+* **Brainstorming:** *"I want to make a cozy farming game mixed with a roguelike. Read my GDD.md, critique it, and let's brainstorm a core gameplay loop."*
+* **Creating a Project:** *"Run the SETUP playbook based on my GDD. I want to create a new Standard Tier project called FarmRogue."*
+* **Editing the Workflow:** *"I want to update the EXECUTOR.md template so that the AI always adds a header comment to every script it writes. Update the template and run sync_templates.py to push it to all my games."*
+* **Updating Global Tooling:** *"Look at my framework_tools python scripts. Can you write a new script that automatically zips up my projects for a release?"*
+
+**Behind the Scenes (Creating a Project):**
+When you run the SETUP playbook, here is exactly what the AI does automatically:
 1. **Reads the GDD:** It absorbs your game's mechanics, scope, and aesthetic.
 2. **Tier Selection:** It asks you whether the project should be a Lite, Standard, or Heavy tier based on the GDD scope.
 3. **Documentation Scaffolding:** Depending on the tier, it generates the tracking files. (Lite gets 3 root markdown files; Standard gets a `project-state/` folder; Heavy gets per-system folders like `combat/` and `inventory/`).
