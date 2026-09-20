@@ -207,9 +207,10 @@ block the session.
      degradation to the user once, in passing.
    - If the queued task specifically requires a Tier 1 operation, stop *that task* (not the
      session) and walk the user through remediation, in order:
-   a. **Submodule/build** — `docs/tools/godot-mcp/build/index.js` must exist (relative to the
-      `Godot_AI_Framework_Public/` root). If missing: `git submodule update --init --recursive` from
-      `Godot_AI_Framework_Public/`, then `cd docs/tools/godot-mcp && npm install && npm run build`.
+   a. **Build** — `docs/tools/godot-mcp/build/index.js` must exist (relative to the
+      `Godot_AI_Framework_Public/` root). It is gitignored by the vendored server's own
+      `.gitignore`, so a fresh clone never has it. If missing:
+      `cd docs/tools/godot-mcp && npm install && npm run build`.
    b. **Machine path lookup** — read `Godot_AI_Framework_Public/docs/machine_paths.json` (the shared,
       committed per-machine path log — see its `_comment` field). Get the current machine's
       identity (`$env:COMPUTERNAME` on Windows, `hostname` on macOS/Linux) and look it up:
@@ -259,8 +260,8 @@ block the session.
    update its `last_verified` date once `get_godot_version` succeeds.
 
 This check runs at the start of every session, not just the first time a project's MCP is set
-up — a previously-working connection can silently drop (stale PATH, a moved Godot install, an
-un-rebuilt submodule after a pull) and this is what catches it before a Tier-1-only task is
+up — a previously-working connection can silently drop (stale PATH, a moved Godot install, a
+server left un-rebuilt after a pull) and this is what catches it before a Tier-1-only task is
 attempted rather than mid-task.
 
 ## Workspace Architecture
@@ -504,7 +505,7 @@ specifically and Godot 3 syntax is invalid here.
 ## Current MCP
 
 This project uses [`godot-mcp`](https://github.com/tugcantopaloglu/godot-mcp)
-(`@tugcantopaloglu/godot-mcp`), vendored as a submodule at `docs/tools/godot-mcp` in the shared
+(`@tugcantopaloglu/godot-mcp`), vendored at `docs/tools/godot-mcp` in the shared
 `Godot_AI_Framework_Public/` root and wired in via this project's `.mcp.json` (see `SETUP.md` Step 0). Its
 tools follow the `mcp__godot__*` naming pattern (e.g., `run_project`, `game_screenshot`,
 `game_eval`, `read_scene`, `rename_file`, `write_file`, `delete_file`). If this project switches to a different

@@ -161,9 +161,9 @@ cd docs/tools/godot-mcp && npm install && npm run build
 
 Verify: `docs/tools/godot-mcp/build/index.js` now exists.
 
-> **Note:** `.gitmodules` declares `docs/tools/godot-mcp` as a git submodule, but the source is
-> actually committed as ordinary files. `git submodule update --init --recursive` — which several
-> playbooks tell the agent to run — does nothing here. Ignore it; just build.
+> **Note:** godot-mcp is **vendored**, not a git submodule — its source is committed directly
+> into this repository. There is no `git submodule update` step. See
+> [`docs/tools/README.md`](docs/tools/README.md) for how to update it to a newer upstream.
 
 ### 3.2 Install the modelkit
 
@@ -990,7 +990,8 @@ knowing it up front saves you a confusing afternoon.
 **Already repaired:** the governance templates (duplicated step numbering, find/replace damage,
 broken cross-references), the missing handoff payload, the `sync_templates.py` data-loss bug, the
 incoherent solo-agent document, the `SETUP` playbook's missing project bootstrap, the 1,185 dead
-index links, the eleven landmine scripts in `framework_tools/`, the missing LICENSE, and the
+index links, the eleven landmine scripts in `framework_tools/`, the missing LICENSE, the
+`.gitmodules` entry for a submodule that was never one, and the
 `model-generation/` workspace — which was not merely broken but **entirely untracked by git**,
 its own `.gitignore` having excluded `build.js`, `models.mjs`, `package.json`, and `AGENTS.md`
 from every clone. What remains is content: the shared libraries are empty until you fill them.
@@ -1008,12 +1009,8 @@ not get the reuse the design promises until you populate the libraries yourself,
 empty correction log.
 
 ### B. Packaging and setup
-- `.gitmodules` declares `docs/tools/godot-mcp` a submodule; the source is actually vendored as
-  ordinary tracked files, so `git submodule update --init --recursive` is a no-op. The `SETUP`
-  playbook now says so, but the `.gitmodules` file itself is still misleading and should be
-  removed or made real.
 - `docs/tools/godot-mcp/build/` is gitignored by that project's own `.gitignore`, so a fresh clone
-  has no compiled server until you build it.
+  has no compiled server until you build it. This is the single most common setup failure.
 - `mcp_config.json` does not inject `GODOT_PATH`, so `machine_paths.json` is only ever read by an
   agent by hand — it never reaches the MCP server automatically. Setting the environment variable
   and fully restarting the agent remains a manual step.
@@ -1047,7 +1044,6 @@ Godot_AI_Framework_Public/
 ├── SETUP-FRAMEWORK.md            # one-time install playbook
 ├── ARCHITECT.md                  # Director rules for an agent opened at the repo root
 ├── .gitignore                    # ignores every game project (each gets its own repo)
-├── .gitmodules                   # declares a submodule that is actually vendored
 │
 ├── Projects/                     # your games live here (gitignored, one repo each)
 │
@@ -1057,7 +1053,9 @@ Godot_AI_Framework_Public/
 │   │   ├── SETUP.md              # project scaffolding playbook
 │   │   ├── common/               # tier-independent templates + tests/ + mcp_config.json
 │   │   └── tiers/{lite,standard,heavy}/
-│   └── tools/godot-mcp/          # vendored MCP server (build/ is gitignored — you must build it)
+│   └── tools/
+│       ├── README.md             # what is vendored here and how to update it
+│       └── godot-mcp/            # vendored MCP server (build/ is gitignored — you must build it)
 │
 ├── framework_tools/              # 3 maintained tools
 │   └── _archive/                 #   11 historical one-offs — never run these
@@ -1079,8 +1077,9 @@ Godot_AI_Framework_Public/
 
 **Godot MCP server** — this repository vendors
 [tugcantopaloglu/godot-mcp](https://github.com/tugcantopaloglu/godot-mcp) at
-`docs/tools/godot-mcp/`, under its own MIT license (`docs/tools/godot-mcp/LICENSE`). All credit for
-that server belongs to its author.
+`docs/tools/godot-mcp/`, under its own MIT license (`docs/tools/godot-mcp/LICENSE`, retained in
+full). All credit for that server belongs to its author. See
+[`docs/tools/README.md`](docs/tools/README.md) for how it is tracked and updated.
 
 **antics-modelkit** — the procedural 3D workspace depends on the
 [`antics-modelkit`](https://www.npmjs.com/package/antics-modelkit) npm package, installed at build

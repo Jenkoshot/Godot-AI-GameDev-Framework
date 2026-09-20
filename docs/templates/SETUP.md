@@ -15,11 +15,9 @@ scaffold `SOLO-AGENT.md` instead and tell them to use that.
 Idempotent — safe to re-run if the configs already exist.
 
 1. Check that `docs/tools/godot-mcp/build/index.js` exists (relative to the
-   `Godot_AI_Framework_Public/` root). If missing, build it:
+   `Godot_AI_Framework_Public/` root). The server's source is vendored into this repository, but
+   its compiled output is gitignored, so a fresh clone never has it. If missing, build it:
    `cd docs/tools/godot-mcp && npm install && npm run build`.
-   (Note: `.gitmodules` describes this directory as a submodule, but the source is vendored as
-   ordinary tracked files. `git submodule update --init --recursive` is a no-op here — do not
-   rely on it, just build.)
 2. Copy `docs/templates/common/mcp_config.json` into this project's `.agents/mcp_config.json`
    (create the `.agents/` folder if missing) AND into `.mcp.json` at the project root. Unmodified
    except for the relative path to `build/index.js` in both files, which must be adjusted for
