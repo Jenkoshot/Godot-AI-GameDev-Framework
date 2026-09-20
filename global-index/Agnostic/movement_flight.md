@@ -11,5 +11,5 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: GD
 
 - **Files:**
-  - [GD] [**state_airborne.gd**](file:///C:/Godot_Projects/mechanic-repository/movement/states/state_airborne.gd)
+  - [GD] [**state_airborne.gd**](file:///C:/Godot_AI_Framework/mechanics/movement/states/state_airborne.gd)
 

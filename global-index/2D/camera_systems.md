@@ -6,11 +6,11 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: GD
 
 - **Files:**
-  - [GD] [**lookahead_camera_offset.gd**](file:///C:/Godot_Projects/mechanic-repository/camera/lookahead_camera_offset.gd)
+  - [GD] [**lookahead_camera_offset.gd**](file:///C:/Godot_AI_Framework/mechanics/camera/lookahead_camera_offset.gd)
 
 ### Trauma Screen Shake
 > Components available: GD
 
 - **Files:**
-  - [GD] [**trauma_screen_shake.gd**](file:///C:/Godot_Projects/mechanic-repository/camera/trauma_screen_shake.gd)
+  - [GD] [**trauma_screen_shake.gd**](file:///C:/Godot_AI_Framework/mechanics/camera/trauma_screen_shake.gd)
 

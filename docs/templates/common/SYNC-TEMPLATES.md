@@ -8,8 +8,9 @@ Ensure that individual game projects in the `Projects/` directory have up-to-dat
 ## What is considered a "Template Doc"?
 These are files that govern AI behavior, setup, or standards.
 **Target Files for Synchronization:**
-- `GEMINI.md`
-- `CLAUDE.md`
+- `ARCHITECT.md`
+- `EXECUTOR.md`
+- `SOLO-AGENT.md`
 - `markdowns4AI/ASSET-STANDARDS.md`
 - `SETUP.md`
 - `markdowns4AI/UPGRADE-TIER.md`
@@ -28,8 +29,8 @@ These are files that govern AI behavior, setup, or standards.
 ## Sync Process
 When executing a sync, follow these steps:
 1. **Determine the Target:** Are we syncing a specific project or all projects?
-2. **Determine the Tier:** For each target project, check its current tier (Lite, Standard, Heavy) by inspecting its setup or existing `GEMINI.md` / `SETUP.md`.
-3. **Compare Files:** Compare the project's template docs with the canonical ones in `Godot_Projects/docs/templates/common/` and `Godot_Projects/docs/templates/tiers/[tier]/`.
+2. **Determine the Tier:** For each target project, check its current tier (Lite, Standard, Heavy) by inspecting its setup or existing `ARCHITECT.md` / `SETUP.md`.
+3. **Compare Files:** Compare the project's template docs with the canonical ones in `docs/templates/common/` and `docs/templates/tiers/[tier]/`.
 4. **Update:** If a project's template doc is missing or out of sync (different content), remove the old one in the project and replace it with the latest version from `docs/templates/`.
 5. **Report:** After completion, output a summary of which projects were evaluated and which files were updated.
 

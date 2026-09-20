@@ -6,5 +6,5 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: GD
 
 - **Files:**
-  - [GD] [**gesture_pattern_recorder.gd**](file:///C:/Godot_Projects/mechanic-repository/minigame/gesture_pattern_recorder.gd)
+  - [GD] [**gesture_pattern_recorder.gd**](file:///C:/Godot_AI_Framework/mechanics/minigame/gesture_pattern_recorder.gd)
 

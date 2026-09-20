@@ -7,7 +7,7 @@ This is usually triggered if Antigravity detects significant design scope creep 
 
 1. **Approval & Target Selection:** State the current tier and the proposed target tier. Ensure the user confirms they want to proceed with the upgrade.
 2. **File Replacement (Governance Sync):** 
-   Replace the project's current AI governance files (`CLAUDE.md`, `GEMINI.md`, etc.) with the versions from the new target tier located in the global repository (`Godot_Projects/docs/templates/tiers/[target_tier]/`).
+   Replace the project's current AI governance files (`CLAUDE.md`, `GEMINI.md`, etc.) with the versions from the new target tier located in the global repository (`Godot_AI_Framework/docs/templates/tiers/[target_tier]/`).
 3. **Data Migration:** Execute the specific data migration steps based on the upgrade path.
 
 ### Path A: Lite -> Standard

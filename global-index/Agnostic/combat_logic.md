@@ -26,13 +26,13 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: PNG
 
 - **Files:**
-  - [PNG] [**muzzle_flash_fps_1.png**](file:///C:/Godot_Projects/effect-blocks/source_files/textures/muzzleflash/muzzle_flash_fps_1.png)
+  - [PNG] [**muzzle_flash_fps_1.png**](file:///C:/Godot_AI_Framework/effect-blocks/source_files/textures/muzzleflash/muzzle_flash_fps_1.png)
 
 ### Muzzleflash 1
 > Components available: PNG
 
 - **Files:**
-  - [PNG] [**muzzleflash_1.png**](file:///C:/Godot_Projects/effect-blocks/source_files/textures/muzzleflash/muzzleflash_1.png)
+  - [PNG] [**muzzleflash_1.png**](file:///C:/Godot_AI_Framework/effect-blocks/source_files/textures/muzzleflash/muzzleflash_1.png)
 
 ### Radial Destructible Target
 > A multi-stage destructible target: a ring of independently-destructible segments shields a core,

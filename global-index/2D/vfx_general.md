@@ -6,5 +6,5 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: GD
 
 - **Files:**
-  - [GD] [**wavy_bezier_tether_line.gd**](file:///C:/Godot_Projects/mechanic-repository/vfx/wavy_bezier_tether_line.gd)
+  - [GD] [**wavy_bezier_tether_line.gd**](file:///C:/Godot_AI_Framework/mechanics/vfx/wavy_bezier_tether_line.gd)
 

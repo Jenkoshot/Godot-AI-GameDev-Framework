@@ -6,5 +6,5 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: TSCN
 
 - **Files:**
-  - [TSCN] [**shader_showcase.tscn**](file:///C:/Godot_Projects/effect-blocks/scenes/other/shader_showcase.tscn)
+  - [TSCN] [**shader_showcase.tscn**](file:///C:/Godot_AI_Framework/effect-blocks/scenes/other/shader_showcase.tscn)
 

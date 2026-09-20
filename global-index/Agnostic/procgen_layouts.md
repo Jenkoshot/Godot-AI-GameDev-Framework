@@ -16,5 +16,5 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Two static utilities for "scratch ticket" / slot-machine style reveal grids: `pick_weighted()`
 
 - **Files:**
-  - [GD] [**weighted_grid_picker.gd**](file:///C:/Godot_Projects/mechanic-repository/procgen/weighted_grid_picker.gd)
+  - [GD] [**weighted_grid_picker.gd**](file:///C:/Godot_AI_Framework/mechanics/procgen/weighted_grid_picker.gd)
 

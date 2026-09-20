@@ -1,13 +1,16 @@
 # Ignore every top-level game project directory (each has its own independent git repo).
 /*/
-
-# Un-ignore the shared, cross-project documentation.
 !/docs/
-
-# Un-ignore the shared, cross-project reusable repositories.
-!/mechanic-repository/
-!/scene-repository/
-!/asset-repository/
+!/mechanics/
+!/scenes/
+!/assets/
 !/global-index/
 !/godot-4-snippets-bible/
+!/new_project_design_docs/
 !/model-generation/
+!/framework_tools/
+
+# Whitelist the example project specifically
+!/Projects/
+/Projects/*/
+!/Projects/Example_Project/

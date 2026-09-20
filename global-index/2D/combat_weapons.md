@@ -6,5 +6,5 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: GD
 
 - **Files:**
-  - [GD] [**melee_weapon_auto_aim.gd**](file:///C:/Godot_Projects/mechanic-repository/combat/melee_weapon_auto_aim.gd)
+  - [GD] [**melee_weapon_auto_aim.gd**](file:///C:/Godot_AI_Framework/mechanics/combat/melee_weapon_auto_aim.gd)
 

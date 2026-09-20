@@ -3,7 +3,7 @@
 This is a highly granular, relational database designed specifically for AI token efficiency. Instead of blindly scanning folders, agents can navigate directly to the specific feature markdown below to find precisely related Scripts, Scenes, and Assets bundled with their explanations.
 
 ## Asset Repository Categories
-Raw 3D models and textures in `../../asset-repository/` are categorized by type rather than by game:
+Raw 3D models and textures in `../../assets/` are categorized by type rather than by game:
 - `building_pieces` (Modular architecture)
 - `characters` (Players, NPCs, enemies)
 - `environment_assets` (Terrain, flora, rocks)

@@ -6,7 +6,7 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: GD
 
 - **Files:**
-  - [GD] [**derail_state.gd**](file:///C:/Godot_Projects/mechanic-repository/movement/derail_state.gd)
+  - [GD] [**derail_state.gd**](file:///C:/Godot_AI_Framework/mechanics/movement/derail_state.gd)
 
 ### Drag To Move
 > Click-and-drag component for any `Node2D`: click its hitbox to pick it up, and it follows the
@@ -22,13 +22,13 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Captures the mouse cursor on scene start, releases it when the player presses a release key
 
 - **Files:**
-  - [GD] [**mouse_capture_toggle.gd**](file:///C:/Godot_Projects/mechanic-repository/input/mouse_capture_toggle.gd)
+  - [GD] [**mouse_capture_toggle.gd**](file:///C:/Godot_AI_Framework/mechanics/input/mouse_capture_toggle.gd)
 
 ### Movement State
 > Components available: GD
 
 - **Files:**
-  - [GD] [**movement_state.gd**](file:///C:/Godot_Projects/mechanic-repository/movement/movement_state.gd)
+  - [GD] [**movement_state.gd**](file:///C:/Godot_AI_Framework/mechanics/movement/movement_state.gd)
 
 ### Movement State Machine
 > A highly decoupled, game-agnostic first-person movement core based on a hierarchical state machine. Designed to be completely disconnected from inputs, weapon mechanics, or specific player nodes.
@@ -49,23 +49,23 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > A rate-limited SFX player where the cooldowns are SHARED across every instance of this component
 
 - **Files:**
-  - [GD] [**shared_cooldown_sfx.gd**](file:///C:/Godot_Projects/mechanic-repository/audio/shared_cooldown_sfx.gd)
+  - [GD] [**shared_cooldown_sfx.gd**](file:///C:/Godot_AI_Framework/mechanics/audio/shared_cooldown_sfx.gd)
 
 ### State Grounded
 > Components available: GD
 
 - **Files:**
-  - [GD] [**state_grounded.gd**](file:///C:/Godot_Projects/mechanic-repository/movement/states/state_grounded.gd)
+  - [GD] [**state_grounded.gd**](file:///C:/Godot_AI_Framework/mechanics/movement/states/state_grounded.gd)
 
 ### State Sliding
 > Components available: GD
 
 - **Files:**
-  - [GD] [**state_sliding.gd**](file:///C:/Godot_Projects/mechanic-repository/movement/states/state_sliding.gd)
+  - [GD] [**state_sliding.gd**](file:///C:/Godot_AI_Framework/mechanics/movement/states/state_sliding.gd)
 
 ### Throttle Coast Controller
 > A binary-throttle speed controller with an arcade "coast" feel: holding the throttle action
 
 - **Files:**
-  - [GD] [**throttle_coast_controller.gd**](file:///C:/Godot_Projects/mechanic-repository/movement/throttle_coast_controller.gd)
+  - [GD] [**throttle_coast_controller.gd**](file:///C:/Godot_AI_Framework/mechanics/movement/throttle_coast_controller.gd)
 

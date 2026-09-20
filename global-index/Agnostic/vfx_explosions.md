@@ -6,7 +6,7 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: PNG
 
 - **Files:**
-  - [PNG] [**explosion_1.png**](file:///C:/Godot_Projects/effect-blocks/source_files/textures/explosion_1.png)
+  - [PNG] [**explosion_1.png**](file:///C:/Godot_AI_Framework/effect-blocks/source_files/textures/explosion_1.png)
 
 ### Impact Burst
 > A generic visual effect scene for hit feedback.
@@ -17,5 +17,5 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: WAV
 
 - **Files:**
-  - [WAV] [**small_explosion.wav**](file:///C:/Godot_Projects/effect-blocks/source_files/audio/small_explosion.wav)
+  - [WAV] [**small_explosion.wav**](file:///C:/Godot_AI_Framework/effect-blocks/source_files/audio/small_explosion.wav)
 

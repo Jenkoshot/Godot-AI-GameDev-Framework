@@ -1,12 +1,12 @@
-# Godot AI Monorepo & Dual-Agent Workflow
+﻿# Godot AI Monorepo Framework
 
 Welcome to the **Godot AI Monorepo Framework**. This repository is a scalable, tiered architecture designed to solve the biggest bottlenecks in AI-assisted game development: context window bloat, Godot scene corruption, and code duplication. 
 
-Instead of treating every game as an isolated folder, this monorepo acts as a centralized brain. It utilizes a **Dual-Agent Workflow** (using Gemini/Antigravity and Claude Code) combined with a **Godot MCP Server** to build games safely, efficiently, and at scale.
+Instead of treating every game as an isolated folder, this monorepo acts as a centralized brain. It utilizes a universal **Architect & Executor Workflow** combined with a **Godot MCP Server** to build games safely, efficiently, and at scale—regardless of which LLM you prefer to use.
 
 ---
 
-## 🌟 Why This Architecture Exists
+## 🚀 Why This Architecture Exists
 
 If you've tried building games with AI, you know the pain points:
 1. **The Context Trap:** You feed your whole project into an AI, the context window fills up, and the AI starts forgetting rules or hallucinating old code.
@@ -14,91 +14,83 @@ If you've tried building games with AI, you know the pain points:
 3. **The Blank Canvas Problem:** AIs prefer writing from scratch. They will write a bespoke `player_controller.gd` 10 different times for 10 different games instead of reusing one.
 
 **The Solution:**
-- **The Planner (Antigravity/Gemini):** Reads your high-level docs, tracks project completion percentage, calculates bug triage, checks shared repositories for reusable code, and writes a strict "blueprint".
-- **The Executors (Claude Code & ChatGPT Codex):** Reads *only* the blueprint. Gemini dynamically routes tasks based on complexity—sending low/medium effort tasks to ChatGPT Codex, and complex architectural tasks to Claude Code (which uses the Godot MCP server for native `.tscn` edits).
-- **The Global Repositories:** Forces the AI to harvest and reuse agnostic code (`mechanic-repository/`) across all your games.
+- **The Architect Agent:** Reads your high-level docs, tracks project completion percentage, calculates bug triage, checks shared repositories for reusable code, and writes a strict "blueprint".
+- **The Executor Agent:** Reads *only* the blueprint and executes it. 
+- **The Global Repositories:** Forces the AI to harvest and reuse agnostic code and assets (`mechanics/`, `scenes/`, `assets/`) across all your games.
 
 ---
 
-## 🚀 Key Features
+## 🛠️ The Agent Ecosystem (LLM Agnostic)
 
-### 1. Automated Triage & Progress Tracking
-You never have to guess what to work on next. When you start a session, Gemini reads your `project-state/_overview.md` and `bugs/master_bugs.md`. It automatically calculates the game's overall completion percentage and selects the single highest-priority task to execute based on three weighted metrics:
-- **Severity** (e.g., Crash > Cosmetic)
-- **Unblock Value** (Does this task unblock 3 other queued features?)
-- **Deadline Proximity**
+This framework is completely LLM-agnostic. Whether you use ChatGPT, Claude, Gemini, Cursor, or local models, the framework governs their behavior through markdown templates:
 
-### 2. Smart Executor Routing (Claude vs. Codex)
-Not every task requires an expensive, heavy-duty AI. Gemini evaluates the complexity of the blueprint it just created and recommends the best Executor:
-- **Low/Medium Complexity:** Gemini generates a copy-paste handoff prompt instructing you to use **ChatGPT Codex** (GPT-5.6).
-- **High Complexity / Deep Refactors:** Gemini hands the blueprint off to **Claude Code** (Sonnet/Opus 5.0) utilizing the Godot MCP server.
-
-### 3. Godot MCP Integration
-Godot's `.tscn` files are fragile. When an LLM tries to guess text-based scene edits, it corrupts the file. Our custom Node.js Godot MCP server allows Claude to interface natively with the Godot engine, dramatically reducing scene corruption.
+- **`ARCHITECT.md`**: The master planner playbook. Instructs your AI to design blueprints, track bugs, and manage the project state without writing code.
+- **`EXECUTOR.md`**: The coder playbook. Instructs your AI to strictly follow the architect's blueprints and safely use the Godot MCP server to modify scenes and scripts.
+- **`SOLO-AGENT.md`**: A unified playbook. For developers who prefer using a single AI (e.g., Cursor) to handle both planning and coding simultaneously.
 
 ---
 
-## 🛠️ Prerequisites
+## ⚖️ The Scale Tiers
 
-To run this framework, you need:
-1. **Godot 4.4+** (Required for the `godot-mcp` server)
-2. **Node.js 18+** (Required for the MCP server and procedural model generation)
-3. **Python 3 + pip** (For running the sync scripts and formatting)
-4. **Claude Code** & **ChatGPT Codex** (The Executors)
-5. **Gemini CLI (Antigravity)** (The Planner)
+Not every game needs the same level of bureaucracy. The framework dynamically categorizes projects into Tiers:
+- **Lite Tier:** Best for game jams and prototypes. Minimal folders. State is tracked in root markdown files.
+- **Standard Tier:** Best for indie games. Groups bugs and state into a clean `project-state/` folder.
+- **Heavy Tier:** Best for massive RPGs or systems-heavy games. Mandates strict architecture logs, session tracking, and per-system tracking files.
+
+*Need to upgrade a game from Lite to Heavy? Just run the `UPGRADE-TIER.md` playbook and the AI will restructure your project automatically.*
 
 ---
 
-## 🧠 The Three Workspaces (How to run the AI)
+## 📂 The Three Workspaces (Where to run the AI)
 
-You do not run the AI from just one place. You open your CLI (Antigravity or Claude) in specific folders depending on what you want the AI to do.
+You do not run the AI from just one place. You open your AI CLI or IDE in specific folders depending on the task.
 
-### 1. The Root Workspace (`/Godot_Projects/`)
-**Run Antigravity here when you want to:**
-- Create a brand new game project (using `docs/templates/SETUP.md`).
-- Run python scripts to sync rules across all games (`python sync_templates.py`).
+### 1. The Root Workspace (`/Godot_AI_Framework_Public/`)
+**Run your AI here when you want to:**
+- Create a brand new game project (Run the `docs/templates/SETUP.md` playbook).
+- Run python scripts to sync rules across all games (`python framework_tools/sync_templates.py`).
 - Ask high-level questions about your entire portfolio of games.
 
 ### 2. The Project Workspace (`/Projects/[Your_Game]/`)
-**Run Antigravity & Claude Code here to actually build the game.**
-* **Step 1:** Open Antigravity in this folder. Ask it to design a feature. It will read `GEMINI.md`, check the global repos, and output a blueprint to `project-state/blueprints/latest_blueprint.md`.
-* **Step 2:** Open Claude Code in the same folder. Tell it: *"Execute the latest blueprint."* It will read `CLAUDE.md`, use the Godot MCP to write the code/scenes, and make an isolated test scene.
-* **Step 3:** You playtest the test scene. Once it feels good, Claude integrates it into the main game.
+**Run your AI here to actually build the game.**
+* **Step 1:** Ask your Architect AI to design a feature. It will read `ARCHITECT.md`, check the global repos, and output a blueprint.
+* **Step 2:** Tell your Executor AI to execute the blueprint. It will read `EXECUTOR.md`, use the Godot MCP to write the code/scenes, and make an isolated test scene.
+* **Step 3:** Playtest the test scene. Once it feels good, the Executor integrates it into the main game.
 
-### 3. The Model Generation Workspace (`/model-generation/`)
-**Run an AI here when you need 3D assets.**
-Instead of opening Blender, open an AI here. It uses a procedural Node.js library (`antics-modelkit`) to generate 3D models via code.
-- Run `npm install`.
-- Ask the AI to write a script to generate a specific model (e.g. "a low poly spaceship").
-- Run `node build.js` to spit out a perfect `.glb` file you can drag into the asset repository.
+### 3. The Global Repositories (`/assets/`, `/scenes/`, `/mechanics/`)
+**The centralized brain of your games.** 
+When your AI builds a great generic system in one of your games, run the `HARVEST-REPO.md` playbook. The AI will extract the code, make it project-agnostic, and move it to `mechanics/` so future games can import it.
 
 ---
 
-## 📖 The Playbooks (How to command the AI)
+## ⚙️ Setting up your Godot Path (Steam & Standalone)
 
-The `docs/templates/` folder contains Markdown "Playbooks". These are highly specific workflows you can command the AI to execute. 
+The Godot MCP Server (`docs/tools/godot-mcp`) needs to know exactly where your Godot executable is located on your machine to safely edit `.tscn` files.
 
-**How to call them:** Open Antigravity in your specific game's folder (`Projects/[Game]`) and simply say: *"Run the [PLAYBOOK_NAME] playbook."*
+If you are using the **Steam version** of Godot (or a custom path), you MUST configure this manually before starting:
 
-- **`HARVEST-REPO.md`**: Run this when you've built a really cool, generic system (like a dialogue manager) in your specific game. The AI will extract it, make it project-agnostic, and move it to the global `mechanic-repository/` so your future games can use it.
-- **`REMOVE-SYSTEM.md`**: Run this when a game system is bloated or broken. The AI will safely untangle it, remove the dependencies, and archive it without breaking the rest of your game.
-- **`DESIGN-DRIFT.md`**: Run this when your game code has drifted away from your original design docs. The AI will audit the codebase and highlight where the code no longer matches the design.
-- **`UPGRADE-TIER.md`**: Our projects have "Tiers" (Lite, Standard, Heavy). If your simple mobile game (Lite) suddenly becomes a massive RPG, run this playbook to upgrade its documentation tier to Heavy, giving the AI stricter architectural rules.
+1. Open the file `docs/machine_paths.json` in a text editor.
+2. Find the `"YOUR_COMPUTER_NAME_HERE"` entry. 
+3. Change `"YOUR_COMPUTER_NAME_HERE"` to match your actual computer's hostname (e.g., `DESKTOP-ABC123`).
+4. Update the `"godot_path"` value to point to your Godot executable. 
+   - **For Steam on Windows:** Usually `C:\Program Files (x86)\Steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe`
+   - **For Standalone:** Wherever you extracted the Godot `.exe`.
+5. Save the file.
 
 ---
 
-## 🔌 Setting up the Godot MCP Server
+## 🔧 Setting up the Godot MCP Server
 
-The Godot MCP Server (`docs/tools/godot-mcp`) is what allows Claude Code to natively understand Godot. 
+Once your path is set above, you can initialize the MCP server:
 
 1. Navigate to `docs/tools/godot-mcp/`.
 2. Run `npm install` and `npm run build`.
-3. In Claude Code, or your preferred MCP client, configure the server by pointing it to the compiled build directory. 
-4. The template configuration is located at `docs/templates/common/mcp_config.json`. The Python sync scripts (`sync_templates.py`) will automatically drop this config into your game projects so Claude knows how to use it.
+3. In your preferred MCP client, configure the server by pointing it to the compiled build directory. 
+4. The template configuration is located at `docs/templates/common/mcp_config.json`. The Python sync scripts (`python framework_tools/sync_templates.py`) will automatically drop this config into your game projects.
 
 ---
 
-## 🤝 Contributing & Customizing
+## 📝 Customizing the Framework
 
-This monorepo is designed to be customized. If you find that the AI keeps making a specific mistake, **do not correct it in the chat**. 
-Instead, edit `docs/templates/tiers/standard/CLAUDE.md` and add a new rule. Then, go to the root directory and run `python sync_templates.py`. Your new rule will instantly be pushed to every single game project you own.
+This monorepo is designed to be customized. If you find that the AI keeps making a specific mistake in your games, **do not correct it in the chat**. 
+Instead, edit `docs/templates/tiers/standard/EXECUTOR.md` and add a new rule. Then, go to the root directory and run `python framework_tools/sync_templates.py`. Your new rule will instantly be pushed to every single game project you own!

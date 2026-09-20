@@ -6,5 +6,5 @@ This file aggregates logic, scenes, assets, and shaders for this specific featur
 > Components available: GD
 
 - **Files:**
-  - [GD] [**kinetic_impact_damage.gd**](file:///C:/Godot_Projects/mechanic-repository/combat/kinetic_impact_damage.gd)
+  - [GD] [**kinetic_impact_damage.gd**](file:///C:/Godot_AI_Framework/mechanics/combat/kinetic_impact_damage.gd)
 

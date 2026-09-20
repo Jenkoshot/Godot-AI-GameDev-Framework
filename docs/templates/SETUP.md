@@ -1,28 +1,28 @@
 # Antigravity Project Setup
 
-Run this once per project. It is idempotent — if `GEMINI.md` already exists, do nothing.
+Run this once per project. It is idempotent — if `ARCHITECT.md` already exists, do nothing.
 
-This project uses a unified agent workflow: Gemini CLI (Antigravity) plans and hands off execution to Claude Code via `GEMINI.md`.
+This project uses a unified agent workflow: Gemini CLI (Antigravity) plans and hands off execution to Claude Code via `ARCHITECT.md`.
 
 ## Step 0 — MCP server verification & auto-config
 
 Run once per project, idempotent — safe to re-run if the submodule or configs already exist.
 
-1. Check that `docs/tools/godot-mcp` (relative to the `Godot_Projects/` root) is an initialized
+1. Check that `docs/tools/godot-mcp` (relative to the `Godot_AI_Framework/` root) is an initialized
    submodule, not an empty folder. If empty, run `git submodule update --init --recursive` from
-   `Godot_Projects/`.
+   `Godot_AI_Framework/`.
 2. Check that `docs/tools/godot-mcp/build/index.js` exists. If missing, build it:
    `cd docs/tools/godot-mcp && npm install && npm run build`.
 3. Copy `docs/templates/common/mcp_config.json` into this project's `.agents/mcp_config.json`
    (create the `.agents/` folder if missing) AND into `.mcp.json` at the project root. Unmodified except for the relative path to
-   `build/index.js` in both files, which must be adjusted for this project's depth under `Godot_Projects/`
+   `build/index.js` in both files, which must be adjusted for this project's depth under `Godot_AI_Framework/`
    (default two levels down: `../../docs/tools/godot-mcp/build/index.js`).
-4. Handle `GODOT_PATH` via `Godot_Projects/docs/machine_paths.json` as normal.
+4. Handle `GODOT_PATH` via `Godot_AI_Framework/docs/machine_paths.json` as normal.
 5. Check that `gdformat`/`gdlint` are on PATH (`gdformat --version`). If missing, install with `pip install gdtoolkit`.
 
 ## Step 1 — Existence check
 
-If `GEMINI.md` exists, stop here. Setup is complete.
+If `ARCHITECT.md` exists, stop here. Setup is complete.
 
 ## Step 2 — Scope & Tier Detection
 
@@ -38,8 +38,8 @@ If `GEMINI.md` exists, stop here. Setup is complete.
 
 ## Step 3a — New project path
 
-1. **Copy Common Files:** Create a markdowns4AI/ folder at the root. Copy `markdowns4AI/PROJECT-PROFILE.md`, `markdowns4AI/ASSET-STANDARDS.md`, `markdowns4AI/DOCTRINE.md`, `markdowns4AI/MCP-SWITCH.md`, `markdowns4AI/HARVEST-REPO.md`, and the `tests/` folder from `c:\Godot_Projects\docs\templates\common\` into the project's markdowns4AI/ folder (create it if missing, but ensure GEMINI.md and CLAUDE.md stay at the root).
-2. **Copy Tier Files:** Copy the specific governance files from `c:\Godot_Projects\docs\templates\tiers\[chosen_tier]\` into the project's markdowns4AI/ folder (create it if missing, but ensure GEMINI.md and CLAUDE.md stay at the root).
+1. **Copy Common Files:** Create a markdowns4AI/ folder at the root. Copy `markdowns4AI/PROJECT-PROFILE.md`, `markdowns4AI/ASSET-STANDARDS.md`, `markdowns4AI/DOCTRINE.md`, `markdowns4AI/MCP-SWITCH.md`, `markdowns4AI/HARVEST-REPO.md`, and the `tests/` folder from the framework's `docs/templates/common/` directory into the project's markdowns4AI/ folder (create it if missing, but ensure ARCHITECT.md and EXECUTOR.md stay at the root).
+2. **Copy Tier Files:** Copy the specific governance files from the framework's `docs/templates/tiers/[chosen_tier]/` directory into the project's markdowns4AI/ folder (create it if missing, but ensure ARCHITECT.md and EXECUTOR.md stay at the root).
 3. **Scaffold Architecture based on Tier:**
    - **If Lite:** Create `project_state.md`, `bugs.md`, and `tweak_guide.md` at the project root.
    - **If Standard:** Create `project-state/`, `project-state/blueprints/`, and `bugs/` folders. Write `project-state/_overview.md`, `project-state/tweak_guide.md`, and `bugs/master_bugs.md`.
@@ -60,6 +60,5 @@ Prompt the user to review organization (`markdowns4AI/ORGANIZE.md`) or design dr
 ## Step 4 — Hand off
 
 Report what was created or found. All future sessions defer to the unified agent workflow where Gemini
-CLI (Antigravity) plans and hands off execution to Claude Code via `GEMINI.md`. Mention to the user that the shared repositories at
-`../../mechanic-repository/`, `../../scene-repository/`, `../../effect-blocks/`, `../../poly-blocks/NatureBlocks/`, and `../../godot-shader-bible/` exist and that `GEMINI.md` checks them before scoping
+CLI (Antigravity) plans and hands off execution to Claude Code via `ARCHITECT.md`. Mention to the user that the shared repositories at
 new implementation work. Also remind them they can run the `markdowns4AI/HARVEST-REPO.md` protocol anytime to sweep their active project for generic assets.
