@@ -24,16 +24,11 @@ before handing off the blueprint to the Executor Agent to execute the required c
    - Master Bugs: `./bugs/master_bugs.md`
 6. Do NOT read individual system markdowns (`./project-state/[system].md`) yet.
 7. **Project Evaluation & Progress Report:**
-   - Evaluate the current state of the project compared to the design docs.
-   - State the overall project completion percentage until a full, complete game is achieved.
-   - Provide the 3 areas that currently need the most work.
-8. Select the single highest priority task or bug to execute, weighing:
-   - **Severity** — how much damage/risk it represents if left unaddressed. A crash or data-loss
-     bug outranks a cosmetic one; a missing core-loop feature outranks a nice-to-have.
-   - **Unblock value** — how much other queued work is stalled behind this one item. Something
-     three other systems depend on outranks an equally-severe but isolated item.
-   - **Deadline proximity** — how close a relevant external deadline is (a Steam page
-     requirement due this week outranks a nice-to-have with no deadline).
+     - Evaluate the current state of the project compared to the design docs.
+     - State the overall project completion percentage until a full, complete game is achieved.
+  8. **Task Generation & User Selection (CRITICAL STEP):**
+     - Provide 3 distinct tasks or bugs that currently need the most work, weighing Severity, Unblock value, and Deadline.
+     - **STOP AND WAIT.** Ask the user which of the 3 tasks they would like to proceed with. Do NOT proceed to Phase 2 or Phase 3 (Blueprinting) until the user explicitly selects a task.
    These are weighed as judgment, not summed into a formula. When they conflict, default to
    unblock value as the tie-breaker — it has the largest downstream effect on everything queued
    after it.

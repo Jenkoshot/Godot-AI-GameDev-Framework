@@ -61,14 +61,21 @@ Not every game needs the same level of AI bureaucracy. If you force an AI to rea
 
 You don't need to clutter the repo with test assets to see if this works. You can prove it yourself in 5 minutes. Here is the exact step-by-step loop for building a feature:
 
-**Step 1: The Architect (Planning)**
+**Step 1: The Architect (Project Evaluation & Planning)**
 Open your Architect AI inside `Projects/[YourGame]/`. 
-*Prompt:* > *"I want to add a player character that can move left and right. Please write a highly detailed blueprint for this. Once done, give me a copy-paste prompt to send to my Executor Agent, and recommend which LLM model size I should use."*
+*Prompt:* > *"What is the state and progress of the project, and what is the next task?"*
 
-**Step 2: The Executor (Coding)**
+The Architect will evaluate your entire project, calculate completion percentage, and present you with **3 tasks** to choose from. 
+
+**Step 2: Task Selection & Blueprinting**
+*Prompt:* > *"Let's go with Task 2."*
+
+Once you choose a task, the Architect will generate a highly detailed blueprint. At the end, it will give you a copy-paste prompt and recommend which model size and effort level the Executor should use.
+
+**Step 3: The Executor (Coding)**
 Open your Executor AI in the same folder. Paste the exact prompt the Architect just gave you. The Executor will read the blueprint, use the Godot MCP to safely modify the `.tscn` files, and write the GDScript.
 
-**Step 3: Playtest & Tweak**
+**Step 4: Playtest & Tweak**
 Open the project in the Godot Engine and press Play. If the movement feels too slow, ask the Executor: 
 *Prompt:* > *"The player moves too slow. Increase the speed variable, and don't forget to log this adjustment in the tweak_guide.md file."*
 
