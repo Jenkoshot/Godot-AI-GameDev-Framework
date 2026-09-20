@@ -4,14 +4,6 @@ Welcome to the **Godot AI GameDev Framework**. This repository is a scalable, ti
 
 Instead of treating every game as an isolated folder, this monorepo acts as a **centralized brain** utilizing a universal Architect & Executor Workflow.
 
-## 🛠️ Included Tools & Ecosystem
-
-This framework comes pre-packaged with powerful tools that allow AI to build games autonomously:
-1. **Godot MCP Server:** A Model Context Protocol server (`docs/tools/godot-mcp/`) that allows the AI to natively read and modify Godot `.tscn` and `.tres` files without corrupting them.
-2. **Procedural 3D Modelkit (`antics.gg`):** An integrated Node.js library (`model-generation/`) that allows the AI to generate and modify 3D `.glb` assets purely through code parameters, saving you from opening Blender.
-3. **Global Harvesting:** Shared `assets/`, `scenes/`, and `mechanics/` folders where the AI can extract and store generic code (like a dialogue system) to instantly reuse in your future games.
-
-
 ---
 
 ## 🖥️ Compatibility & Tested Environments
@@ -20,7 +12,7 @@ While the markdown templates technically allow you to use any AI, this framework
 - **Tested AI Agents:** ChatGPT Codex, Claude Code, and Antigravity (Gemini).
 - **Primary Environment:** Fully tested using the Desktop App versions of these AIs on **Windows**.
 - **CLI Environments:** It should work perfectly with terminal/CLI versions of these AIs on Windows as well, provided your Node/Python environment variables are set up correctly.
-- **Linux/macOS:** Currently **untested**. Because the framework relies on standard Python and Node.js scripts, it should be natively compatible, but certain pathing logic (like pointing to the Godot executable in machine_paths.json) will require your own manual configuration.
+- **Linux/macOS:** Currently **untested**. Because the framework relies on standard Python and Node.js scripts, it should be natively compatible, but certain pathing logic (like pointing to the Godot executable in `machine_paths.json`) will require your own manual configuration.
 
 ---
 
@@ -34,62 +26,16 @@ The AI will automatically install the Node and Python requirements, compile the 
 
 ---
 
-## 🌍 2. The Root Level (The Director Workspace)
+## 🏗️ 2. Creating a Project (Behind the Scenes)
 
-When your AI is running at the **root of the repository**, it acts as the Director. This is where you brainstorm ideas, create new games, and manage the overall workflow. 
+When you are ready to make a game, place your Game Design Document (GDD) at the root of the repository (e.g., `GDD.md`). Then, open your AI at the root and say: *"Run the SETUP playbook based on my GDD."*
 
-**Where to put your GDD?**
-If you have a Game Design Document, drop it anywhere at the root (or in `docs/`) and tell the AI to read it.
-
-### Demo Prompts (Run at the Root):
-* **Brainstorming:** *"I want to make a cozy farming game mixed with a roguelike. Read my GDD.md, critique it, and let's brainstorm a core gameplay loop."*
-* **Creating a Project:** *"Run the SETUP playbook. I want to create a new Standard Tier project called 'FarmRogue' based on our GDD."*
-* **Editing the Workflow:** *"I want to update the EXECUTOR.md template so that the AI always adds a header comment to every script it writes. Update the template and run sync_templates.py to push it to all my games."*
-* **Updating Global Tooling:** *"Look at my framework_tools python scripts. Can you write a new script that automatically zips up my projects for a release?"*
-
----
-
-## 🏗️ 3. The Project Level (The Architect & Executor Workspace)
-
-Once a project is created, open your AI terminal **inside the project folder** (e.g., `Projects/FarmRogue/`). 
-
-Here, your AI splits into two roles: **The Architect** (planning, tracking bugs, architecture) and **The Executor** (writing code, modifying scenes).
-
-### Demo Prompts (Run at the Project Level):
-* **Task Evaluation:** *"Read the project_state.md and bugs/master_bugs.md. What is the highest priority feature or bug we should work on next?"*
-* **Custom Task Planning (The Architect):** *"I want to add a double-jump mechanic. Create a highly detailed architectural plan for this. Once done, give me a copy-paste prompt to send to my Executor Agent, and tell me what LLM model size and effort level I should use for it."*
-* **Coding (The Executor):** *"Execute the latest blueprint you just made for the double-jump. Use the Godot MCP to modify the Player.tscn file."*
-* **Concept Art & Vibe Checks:** *"Generate a concept image for what the main menu UI should look like based on our game's theme."*
-
-### 🐙 Per-Project Version Control (Git)
-A massive advantage of this framework is that **every project is its own Git repository**. 
-If you want to push your game to GitHub, just create an empty repo online, give the SSH link to the AI, and say:
-> *"Initialize a git repo here, make an initial commit, and push it to this link: [git@github.com...]"*
-
----
-
-## 🎨 4. Procedural 3D Modeling
-
-Need a 3D asset? Open your AI terminal inside the `/model-generation/` folder. 
-
-This folder uses the `antics.gg` procedural modelkit. **How it works:** The AI doesn't try to hallucinate raw binary 3D meshes. Instead, it writes a Javascript recipe (`models.mjs`) that mathematically constructs the model using parameters (extrude, bevel, twist).
-
-### Demo Prompts (Run in `/model-generation/`):
-* *"I need a low-poly medieval broadsword. Here is a concept image to base it on. Write the recipe in models.mjs."*
-* *"Modify the broadsword script to make the hilt wider and the blade slightly glowing blue."*
-
-**Pro-Tip:** Use higher-level, highly capable LLMs (like Claude 3.5 Sonnet or GPT-4o) for procedural modeling, as the spatial reasoning required to code 3D math is extremely complex. Because the models are parameterized, you can ask the AI to simply "tweak the blade length" and it only has to change a single number in the code!
-
----
-
-## 🌾 5. Global Harvesting (Never Write Code Twice)
-
-When you build a fantastic, reusable system (like an Inventory UI or a Dialogue Manager) inside one of your games, don't leave it trapped there!
-
-Open your AI in that game's folder and say:
-> *"Run the HARVEST-REPO playbook on our new Dialogue System."*
-
-The AI will carefully untangle the code from your specific game, make it project-agnostic, and move it to the global `mechanics/` or `assets/` folder. The next time you start a new game, your AI can instantly import that system.
+**Here is exactly what the AI does automatically:**
+1. **Reads the GDD:** It absorbs your game's mechanics, scope, and aesthetic.
+2. **Tier Selection:** It asks you whether the project should be a Lite, Standard, or Heavy tier based on the GDD scope.
+3. **Documentation Scaffolding:** Depending on the tier, it generates the tracking files. (Lite gets 3 root markdown files; Standard gets a `project-state/` folder; Heavy gets per-system folders like `combat/` and `inventory/`).
+4. **Godot Project Creation:** It physically creates the `Projects/[YourGame]/` directory, generates a valid `project.godot` file, and an `icon.svg` so the engine recognizes it immediately.
+5. **Git Initialization:** It runs `git init` inside your specific project folder. This ensures every single game you make acts as an isolated Git repository, ready to be pushed to its own GitHub page.
 
 ---
 
@@ -97,28 +43,73 @@ The AI will carefully untangle the code from your specific game, make it project
 
 Not every game needs the same level of AI bureaucracy. If you force an AI to read 20 architectural documents for a Flappy Bird clone, you waste tokens. If you don't use enough documentation for a massive RPG, the AI will hallucinate. 
 
-When you create a project, the AI will ask you which tier to use:
-
 ### 🟢 Lite Tier
-* **Why choose it:** Game jams, weekend prototypes, and highly experimental ideas.
 * **What it has:** Zero folder clutter. State is tracked in just three files located directly at the root of your game: `project_state.md`, `bugs.md`, and `tweak_guide.md`.
 * **How it works:** The AI reads those three files instantly, giving it lightning-fast context on your game without navigating directories.
 
 ### 🟡 Standard Tier
-* **Why choose it:** Most indie games, months-long projects, and standard scoped ideas.
 * **What it has:** Cleans up the root directory by moving documentation into dedicated `project-state/` and `bugs/` folders. It introduces the `blueprints/` directory.
 * **How it works:** The Architect AI drafts detailed Markdown blueprints in the blueprints folder. The Executor AI reads that blueprint and executes it, keeping planning and coding completely separated for higher quality code.
 
 ### 🔴 Heavy Tier
-* **Why choose it:** Massive RPGs, complex strategy games, multi-year projects, or games with multiple human developers.
 * **What it has:** Granular, per-system tracking. Instead of one master state file, documentation is split into discrete folders (e.g., `project-state/combat/`, `project-state/inventory/`). It also enforces `architecture_decisions.md` (ADRs) and `session_log.md` tracking.
 * **How it works:** Completely eliminates context-window bloat. If the AI is working on the inventory, it is strictly forbidden from reading the combat documentation. It ensures the AI only loads the exact context it needs for the task at hand.
 
-*Note: You are never locked in. If your Lite game jam project turns into a commercial product, just ask your AI to "Run the UPGRADE-TIER playbook" and it will automatically restructure your files into a Standard or Heavy tier without losing any data.*
+---
+
+## 🎮 3. Working on a Project (The Daily Loop)
+
+You don't need to clutter the repo with test assets to see if this works. You can prove it yourself in 5 minutes. Here is the exact step-by-step loop for building a feature:
+
+**Step 1: The Architect (Planning)**
+Open your Architect AI inside `Projects/[YourGame]/`. 
+*Prompt:* > *"I want to add a player character that can move left and right. Please write a highly detailed blueprint for this. Once done, give me a copy-paste prompt to send to my Executor Agent, and recommend which LLM model size I should use."*
+
+**Step 2: The Executor (Coding)**
+Open your Executor AI in the same folder. Paste the exact prompt the Architect just gave you. The Executor will read the blueprint, use the Godot MCP to safely modify the `.tscn` files, and write the GDScript.
+
+**Step 3: Playtest & Tweak**
+Open the project in the Godot Engine and press Play. If the movement feels too slow, ask the Executor: 
+*Prompt:* > *"The player moves too slow. Increase the speed variable, and don't forget to log this adjustment in the tweak_guide.md file."*
+
+---
+
+## 🎨 4. Procedural 3D Modeling Deep Dive (`antics.gg`)
+
+Need a 3D asset but don't know how to use Blender? Open your AI terminal inside the `/model-generation/` folder. 
+
+This folder uses the `antics.gg` procedural modelkit. The AI doesn't hallucinate raw binary 3D meshes. Instead, it writes a Javascript recipe (`models.mjs`) that mathematically constructs the model.
+
+**Step-by-Step Generation:**
+1. Drop a reference image (concept art) into the chat.
+2. *Prompt:* > *"Analyze this image. I need a low-poly stylized medieval broadsword. Write the procedural generation recipe for it in models.mjs. Use basic extrusions and bevels."*
+3. Run `node build.js` in your terminal.
+4. It will spit out a `.glb` file. Drag this file into your global `assets/models/` folder.
+5. *Iteration:* If the sword looks wrong, do not regenerate it from scratch! Tell the AI: *"Modify the script to make the hilt 20% wider and the blade slightly glowing blue."* It only has to change a few variables in the code.
+
+*Pro-Tip:* Always use the smartest models available (like Claude 3.5 Sonnet or GPT-4o) for this workspace. 3D spatial math is highly complex.
+
+---
+
+## 📖 The Playbook Directory (Command Reference)
+
+The framework is driven by "Playbooks" located in `docs/templates/` and `framework_tools/`. Think of these as magic spells you can cast by simply telling the AI to run them.
+
+| Playbook / Template | What it does | Where to call it | Which Agent |
+| :--- | :--- | :--- | :--- |
+| **`SETUP.md`** | Consumes your GDD, selects a tier, scaffolds the Godot project, and inits Git. | Root Directory | Architect |
+| **`ARCHITECT.md`** | The core rulebook governing how your planning AI creates blueprints and tracks bugs. | Automatically read | Architect |
+| **`EXECUTOR.md`** | The core rulebook governing how your coding AI safely edits Godot scenes via MCP. | Automatically read | Executor |
+| **`SOLO-AGENT.md`** | A unified rulebook for users who only use a single AI (like Cursor) for both planning and coding. | Automatically read | Solo Agent |
+| **`HARVEST-REPO.md`** | Extracts a cool system from your game, makes it agnostic, and saves it to global `mechanics/`. | Project Directory | Architect |
+| **`UPGRADE-TIER.md`** | Upgrades a Lite game to a Standard/Heavy game by automatically restructuring its folders. | Project Directory | Architect |
+| **`DESIGN-DRIFT.md`** | Audits your game's codebase against your GDD and highlights where you went off track. | Project Directory | Architect |
+| **`REMOVE-SYSTEM.md`** | Safely unhooks and deletes a bloated or broken feature without corrupting the rest of the game. | Project Directory | Executor |
+| **`ORGANIZE.md`** | Cleans up messy folders, deletes orphaned files, and standardizes naming conventions. | Project Directory | Executor |
+| **`sync_templates.py`** | A python script that pushes your custom rule updates to every single game you own. | Root Directory | Terminal |
 
 ---
 
 ## 🔧 Customizing AI Behavior
 
-If the AI makes a mistake that annoys you, **do not correct it in chat**. Open `docs/templates/common/EXECUTOR.md`, add a rule saying *"Never do X again"*, and run the sync script. Your AI will instantly learn that lesson for every game you ever build. Happy devving!
-
+If the AI makes a mistake that annoys you, **do not correct it in chat**. Open `docs/templates/common/EXECUTOR.md`, add a rule saying *"Never do X again"*, and run the Python sync script at the root. Your AI will instantly learn that lesson for every game you ever build. Happy devving!
