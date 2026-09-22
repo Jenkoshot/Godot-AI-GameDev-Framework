@@ -1134,7 +1134,7 @@ project.
 ```
 Godot_AI_Framework_Public/
 ├── README.md                     # this file
-├── LICENSE                       # MIT, plus third-party component notices
+├── LICENSE                       # GNU GPL v3 license text
 ├── SETUP-FRAMEWORK.md            # one-time install playbook
 ├── ARCHITECT.md                  # Director rules for an agent opened at the repo root
 ├── .gitignore                    # ignores every game project (each gets its own repo)
@@ -1182,12 +1182,11 @@ time and not vendored here.
 **context7** — MCP documentation server by [Upstash](https://github.com/upstash/context7), invoked
 via `npx` and not vendored here.
 
-**The framework's original content is released under the [MIT License](LICENSE).** Third-party
-components are not relicensed by this repository: the vendored `godot-mcp` keeps its own MIT
-license and copyright notice at `docs/tools/godot-mcp/LICENSE`, while npm-installed dependencies
-such as `antics-modelkit`, `three`, `@gltf-transform/cli`, and Context7 remain subject to their own
-upstream license terms. The root `LICENSE` includes the framework's MIT text plus a third-party
-component notice.
+**The framework's original content is released under the [GNU General Public License v3.0 or later](LICENSE) (GPL-3.0-or-later).** You may use, study, modify, and redistribute the framework; if you distribute a modified or derivative version covered by the GPL, it must remain available under the GPL's copyleft terms and its corresponding source must be made available as required by the license.
+
+**Games you create with the framework are not automatically GPL-licensed merely because you used the framework as a development workflow or tool.** If you directly copy or incorporate GPL-covered framework code into a distributed game, however, the GPL may apply to the resulting covered work. Choose the license for your own game accordingly and review the GPL terms when incorporating framework code directly.
+
+Third-party components are not relicensed by this repository. The vendored `godot-mcp` keeps its own MIT license and copyright notice at `docs/tools/godot-mcp/LICENSE`; npm-installed dependencies such as `antics-modelkit`, `three`, `@gltf-transform/cli`, and Context7 remain subject to their own upstream license terms.
 
 ---
 
