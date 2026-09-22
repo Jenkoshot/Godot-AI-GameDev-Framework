@@ -108,7 +108,7 @@ Each step came from a problem I ran into while trying to make games. The framewo
 
 A key principle is that **repeated corrections should become durable rules**. If an AI repeatedly does something you do not want, the intended fix is not to keep correcting it in disposable chats. Update the framework rule or the project's doctrine so future sessions inherit the lesson.
 
-> **Current status:** this repository is the scaffolding, rules, and tooling for the workflow — not a finished one-click game generator. Some shared libraries intentionally start empty, and there are still rough edges documented in [Known Limitations](#known-limitations--rough-edges).
+> **Current status:** this repository is the scaffolding, rules, and tooling for the workflow — not a finished one-click game generator. Some shared libraries intentionally start empty, and there are still rough edges documented in [Known Limitations](#15-known-limitations--rough-edges).
 
 ---
 
@@ -128,9 +128,9 @@ A key principle is that **repeated corrections should become durable rules**. If
 12. [framework_tools](#12-framework_tools)
 13. [Customizing AI behavior](#13-customizing-ai-behavior)
 14. [Troubleshooting](#14-troubleshooting)
-15. [Known limitations & rough edges](#known-limitations--rough-edges)
-16. [Repository layout](#repository-layout)
-17. [Credits & licensing](#credits--licensing)
+15. [Known limitations & rough edges](#15-known-limitations--rough-edges)
+16. [Repository layout](#16-repository-layout)
+17. [Credits & licensing](#17-credits--licensing)
 
 ---
 
@@ -218,7 +218,24 @@ Both are declared in `docs/templates/common/mcp_config.json`, which gets copied 
 
 ## 3. Installation
 
-### The short version
+### Easiest path: use the setup playbook
+
+Clone or open the repository, then open a compatible AI coding agent or terminal at the **root of
+this repository** and say:
+
+> *"Run the SETUP-FRAMEWORK playbook."*
+
+It will walk `SETUP-FRAMEWORK.md`: verify prerequisites, `npm install && npm run build` the MCP
+server, `npm install` the modelkit, ask for your Godot executable path, write it into
+`docs/machine_paths.json`, and install the Python tooling used by the framework.
+
+This is assisted setup, not one-click setup. **It will not restart your agent for you, and
+`GODOT_PATH` still needs to reach the MCP server.** See 3.3.
+
+### Manual installation
+
+If you prefer to install each requirement yourself, or need to troubleshoot the setup playbook,
+the equivalent manual path is:
 
 ```bash
 git clone <your-fork-url> Godot_AI_Framework_Public
@@ -230,18 +247,6 @@ pip install gdtoolkit
 
 Then configure your Godot path — see [3.3](#33-tell-the-framework-where-godot-is) below. That step
 is the one people get wrong.
-
-### The AI-assisted version
-
-Open an AI terminal at the **root of this repository** and say:
-
-> *"Run the SETUP-FRAMEWORK playbook."*
-
-It will walk `SETUP-FRAMEWORK.md`: verify prerequisites, `npm install && npm run build` the MCP
-server, `npm install` the modelkit, ask for your Godot executable path, and write it into
-`docs/machine_paths.json`.
-
-**It will not restart your agent for you, and it must be restarted.** See 3.3.
 
 ### 3.1 Build the MCP server — this is not optional
 
@@ -583,7 +588,7 @@ Projects/FarmRogue/
 ├── ARCHITECT.md               # planner rules      ─┐
 ├── EXECUTOR.md                # implementer rules   ├─ synced from docs/templates/
 ├── SOLO-AGENT.md              # single-agent rules ─┘
-├── CLAUDE.md / AGENTS.md      # YOU create these — see Section 4
+├── CLAUDE.md / AGENTS.md      # agent pointer file; SETUP creates the one you choose
 ├── README.md                  # auto-maintained: Working / In Progress / Known Issues
 ├── design_docs/               # YOUR GDD lives here. Exact folder name required.
 ├── markdowns4AI/              # all non-root governance docs
@@ -924,8 +929,8 @@ python framework_tools/build_global_index.py
 ```
 
 It also takes `--dry-run`, and `--check` (exit 1 if the index has drifted — useful as a
-pre-commit or CI guard). See [Section 10](#current-state--read-this-before-relying-on-any-of-it)
-for how entries get classified.
+pre-commit or CI guard). See [Section 10](#10-the-shared-libraries), especially
+[Current state](#current-state--read-this-before-relying-on-any-of-it), for how entries get classified.
 
 The two sync scripts accept the same flags:
 
@@ -1076,7 +1081,7 @@ naming products, because model names go stale much faster than these rules do. M
 whatever you have.
 
 ---
-## Known limitations & rough edges
+## 15. Known limitations & rough edges
 
 Everything below is a real, verified gap in the repository as published. None of it is fatal, but
 knowing it up front saves you a confusing afternoon.
@@ -1129,7 +1134,7 @@ project.
 
 ---
 
-## Repository layout
+## 16. Repository layout
 
 ```
 Godot_AI_Framework_Public/
@@ -1167,7 +1172,7 @@ Godot_AI_Framework_Public/
 
 ---
 
-## Credits & licensing
+## 17. Credits & licensing
 
 **Godot MCP server** — this repository vendors
 [tugcantopaloglu/godot-mcp](https://github.com/tugcantopaloglu/godot-mcp) at
@@ -1182,11 +1187,11 @@ time and not vendored here.
 **context7** — MCP documentation server by [Upstash](https://github.com/upstash/context7), invoked
 via `npx` and not vendored here.
 
-**The framework's original content is released under the [GNU General Public License v3.0 or later](LICENSE) (GPL-3.0-or-later).** You may use, study, modify, and redistribute the framework; if you distribute a modified or derivative version covered by the GPL, it must remain available under the GPL's copyleft terms and its corresponding source must be made available as required by the license.
+**The framework's original content is released under the [GNU General Public License v3.0 or later](LICENSE) (GPL-3.0-or-later).** You may use, study, modify, and redistribute the framework. If you distribute a modified or derivative version that is covered by the GPL, the GPL's copyleft and corresponding-source requirements apply.
 
-**Games you create with the framework are not automatically GPL-licensed merely because you used the framework as a development workflow or tool.** If you directly copy or incorporate GPL-covered framework code into a distributed game, however, the GPL may apply to the resulting covered work. Choose the license for your own game accordingly and review the GPL terms when incorporating framework code directly.
+**Games you create with the framework are not automatically GPL-licensed merely because you used the framework as a development workflow or tool.** If you directly copy or incorporate GPL-covered framework code into a distributed game, however, GPL obligations may apply to the resulting covered work. Review the license terms when incorporating framework code directly.
 
-Third-party components are not relicensed by this repository. The vendored `godot-mcp` keeps its own MIT license and copyright notice at `docs/tools/godot-mcp/LICENSE`; npm-installed dependencies such as `antics-modelkit`, `three`, `@gltf-transform/cli`, and Context7 remain subject to their own upstream license terms.
+**Third-party components keep their own licenses.** The vendored `godot-mcp` remains under its own MIT license and copyright notice at `docs/tools/godot-mcp/LICENSE`. npm-installed or externally invoked dependencies such as `antics-modelkit`, `three`, `@gltf-transform/cli`, and Context7 are not relicensed by this repository and remain subject to their upstream terms.
 
 ---
 
