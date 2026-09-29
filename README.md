@@ -1,30 +1,123 @@
 # Godot AI GameDev Framework
 
-A monorepo + playbook system for building Godot 4 games with AI coding agents.
+**A structured Godot 4 + AI workspace for turning a game idea into a real project and working through it one task at a time.**
 
-It exists to solve four specific failure modes that show up the moment you point an AI at a real
-game project:
+I built this because I got tired of aimless AI-assisted development.
 
-| Failure mode | What this framework does about it |
+My original workflow was basically: copy GDScript files into Gemini, attach my GDD, ask it to add or fix something, paste the result back into Godot, and repeat. As my projects grew, I even built a small web app to combine all of my `.gd` files into one AI-readable TXT/PDF so Gemini could see more of the codebase at once.
+
+Better coding agents solved part of that problem, but they did not solve the bigger one:
+
+> **I still didn't have a development workflow.**
+
+I could ask an AI to implement almost anything, but I was still deciding what to work on based on whatever interested me that day. I did not have a reliable picture of what was finished, what was broken, what depended on something else, what should come next, or whether the implementation was still aligned with the original game design.
+
+This framework is the workflow I gradually built around that problem.
+
+It is **not an AI that makes a game while you sit back and watch**. It is a workspace for keeping the developer in control of the game while giving AI agents enough structure, context, tools, and persistent project state to help move it forward deliberately.
+
+The core loop is:
+
+```text
+Game idea
+   ↓
+Design / GDD
+   ↓
+Create a structured Godot project
+   ↓
+Architect reads design + current state + bugs
+   ↓
+Architect proposes 3 high-priority tasks
+   ↓
+You choose what to work on
+   ↓
+Architect creates an implementation blueprint
+   ↓
+Executor implements it
+   ↓
+You playtest, judge the feel, and iterate
+   ↓
+Architect audits what actually landed
+   ↓
+Project state / bugs / documentation are updated
+   ↓
+"What’s next?"
+   ↓
+Repeat
+```
+
+You can ignore the Architect's recommendations at any time and give it a custom task. The framework exists to provide structure, not to take creative control away from you.
+
+## What the framework is trying to solve
+
+The coding agent is only one part of making a game. The harder long-term problem is keeping **design intent, implementation state, priorities, bugs, architecture, tuning information, testing, and reusable work** coherent while the project changes over months of development.
+
+The framework therefore treats your GDD as living project context rather than a document you write once and forget. It tracks what parts of that design actually exist in the game, what still needs work, and what has been deliberately changed or removed.
+
+It also supports multiple games in the same workspace. Each game keeps its own design and project state, while reusable mechanics, scenes, shaders, assets, and other work can be harvested into shared libraries for later projects.
+
+The goal is simple:
+
+> **Go from "I have a game idea" to "I know what I should work on next" — then keep repeating that loop until there is a game.**
+
+---
+
+## Where this came from
+
+This framework grew out of my own learning process as a beginner solo developer.
+
+The workflow evolved roughly like this:
+
+```text
+Manual Godot / GDScript
+        ↓
+Copy individual scripts into web AI
+        ↓
+Compile the codebase into AI-readable TXT/PDF
+        ↓
+Specialized AI roles and handoffs
+        ↓
+Repo-aware coding agents + Godot MCP
+        ↓
+Persistent project state + Architect / Executor split
+        ↓
+Tests, audits, bug tracking, design-drift protection
+        ↓
+Reusable multi-project workspace
+```
+
+Each step came from a problem I ran into while trying to make games. The framework is still evolving, and it is deliberately open to being changed, stripped down, or combined with better tools.
+
+---
+
+## What is inside
+
+| Layer | Purpose |
 | :--- | :--- |
-| **Context bloat** — the agent reads 40 files to change one variable | Tiered, lazy-loaded documentation. The agent reads only the system it was assigned. |
-| **Scene corruption** — the agent hand-edits a `.tscn` and breaks every UID reference | All resource operations go through a Godot MCP server that talks to the engine. |
-| **Planner/coder collision** — one agent both designs and codes, badly | Split roles: an **Architect** that plans and writes blueprints, an **Executor** that only implements them. |
-| **Reinventing the same mechanic** — every project rebuilds a health bar | Shared `mechanics/` `scenes/` `assets/` libraries the agents are mandated to check first. |
+| **Project tiers** | Scale the amount of process/documentation to the size of the game instead of forcing a prototype and a large project through the same workflow. |
+| **Architect** | Reads the design, project state, bugs, and dependencies; proposes priorities; then creates a concrete blueprint for the task you choose. |
+| **Executor** | Implements the chosen blueprint, uses Godot tooling where appropriate, writes/tests code, and records what changed. |
+| **Human playtest gate** | You decide whether the mechanic actually looks, feels, and behaves correctly. Passing automated checks is not the same thing as being good in-game. |
+| **Adversarial audit** | The Architect can compare the finished implementation against the original blueprint and flag things that were missed or changed. |
+| **Persistent project state** | Keeps future AI sessions aware of what exists, what is verified, what is broken, and what decisions have already been made. |
+| **Design docs + doctrine** | Keep implementation connected to the game you actually intended to make and preserve your non-negotiable design choices. |
+| **Bug + tweak tracking** | Separates broken behavior from tunable gameplay values so iteration does not depend on remembering where everything lives. |
+| **Godot MCP** | Lets compatible agents inspect and interact with Godot rather than treating the project as only a pile of text files. |
+| **Shared libraries** | Encourages later games to reuse/adapt mechanics, scenes, shaders, assets, and other work before generating another version from scratch. |
+| **Procedural 3D workspace** | Integrates Antics ModelKit for deterministic, code-generated 3D assets that can be iterated and viewed in a Godot test project. |
 
-> **Read this before you start:** this repository is the *scaffolding and rules*, not a finished
-> product. The shared asset libraries ship empty, and the 3D modelling workspace needs three small
-> fixes before it will run. Everything known is listed in
-> [Known Limitations](#known-limitations--rough-edges) — read that section before you file a bug.
+A key principle is that **repeated corrections should become durable rules**. If an AI repeatedly does something you do not want, the intended fix is not to keep correcting it in disposable chats. Update the framework rule or the project's doctrine so future sessions inherit the lesson.
+
+> **Current status:** this repository is the scaffolding, rules, and tooling for the workflow — not a finished one-click game generator. Some shared libraries intentionally start empty, and there are still rough edges documented in [Known Limitations](#known-limitations--rough-edges).
 
 ---
 
 ## Contents
 
-1. [How it works](#1-how-it-works-the-mental-model)
+1. [The mental model](#1-the-mental-model)
 2. [Requirements](#2-requirements)
 3. [Installation](#3-installation)
-4. [Connecting your AI agent (required — nothing does this for you)](#4-connecting-your-ai-agent)
+4. [Connecting your AI agent](#4-connecting-your-ai-agent)
 5. [Your first game, start to finish](#5-your-first-game-start-to-finish)
 6. [The daily loop](#6-the-daily-loop)
 7. [Anatomy of a generated project](#7-anatomy-of-a-generated-project)
@@ -41,53 +134,54 @@ game project:
 
 ---
 
-## 1. How it works (the mental model)
+## 1. The mental model
 
-There are **three places you run an AI agent**, and they behave differently because they read
-different files.
+There are three working roles in the framework. They are separated so that deciding **what should be built**, deciding **how it should be built**, and actually **changing the project** do not collapse into one long AI session.
 
-### The Director — an agent at the repo root
+### The Director — workspace-level work
 
-This is where you brainstorm, create new projects, edit the framework's own rules, and run
-repo-wide tooling. It has no Godot MCP connection and no game context. It is for meta-work.
+The Director operates at the framework root. It is for creating projects, maintaining the framework, managing shared tooling/libraries, and other work that spans games. It is not the agent that decides the design of an individual game.
 
-### The Architect — an agent inside `Projects/<YourGame>/`, reading `ARCHITECT.md`
+### The Architect — decide what comes next and blueprint it
 
-The planner. It never writes GDScript. Its job, every session:
+The Architect operates inside one game project.
 
-1. Read the project's doctrine, design docs, and state files.
-2. Report a completion percentage against the design docs.
-3. Offer you **three** candidate tasks and **stop and wait** for you to pick one.
-4. Write a detailed **blueprint** — scene tree, signals, `@export` parameters, the math
-   *relationships* (not hardcoded magic numbers).
-5. Emit a **copy-paste handoff prompt** plus a recommendation of which model/effort to use.
-6. After the Executor finishes, run an **adversarial audit**: compare the archived blueprint
-   against the code that actually landed and file bugs for anything silently dropped.
+At the start of a normal development cycle it reads the project's doctrine, design documents, current implementation state, known bugs, and relevant dependencies. It produces an **estimated project snapshot** and recommends three high-priority tasks.
 
-### The Executor — an agent inside the same folder, reading `EXECUTOR.md`
+**You choose the task.** The Architect does not get to decide what game you make.
 
-The implementer. It never decides scope. It reads the blueprint, writes strictly-typed GDScript 4,
-drives the Godot MCP for anything touching `.tscn`/`.tres`, writes tests, updates the state files,
-and stops to flag anything ambiguous rather than improvising.
+Once you choose, it creates an implementation blueprint describing the intended result, relevant files/scenes, scene structure, signals, exported tuning values, tests, dependencies, and important mathematical relationships. It then produces a handoff for the Executor.
 
-> **Why two agents instead of one?** The Architect needs wide context (all design docs, all state)
-> and the Executor needs narrow context (one blueprint, one system). Running them as one session
-> means paying for wide context on every code edit. If you only have one AI, use `SOLO-AGENT.md`,
-> which carries both role sets plus the two rules that stop a solo session from collapsing them:
-> finish planning before writing code, and clear context between the two halves.
+After implementation and your playtest, the Architect can perform an adversarial audit: compare the blueprint with what actually landed and flag omissions, unexpected changes, or follow-up work.
 
-### The loop
+### The Executor — implement the chosen task
 
+The Executor works from the approved blueprint rather than inventing the project's direction as it codes.
+
+It can edit GDScript, use the Godot MCP for supported editor/project operations, run formatting/linting/headless tests, and update the implementation state after the work is complete.
+
+The separation is a **workflow choice**, not a claim that every project needs two different AI products. If you prefer one agent, `SOLO-AGENT.md` combines the responsibilities while preserving a planning phase and an implementation phase.
+
+### The human role — the part the framework does not replace
+
+The framework deliberately leaves the most important judgment to you.
+
+You decide what game you want to make, which proposed task to choose, whether to ignore the recommendations, whether an implementation matches your intent, and whether something actually feels good when played.
+
+Automated tests can prove that a value is calculated correctly. They cannot prove that the value is fun.
+
+### The development loop
+
+```text
+                 ┌──────────────────────────────────────────────┐
+                 │                                              │
+You → Architect → 3 priorities → you choose → blueprint → Executor
+ ↑                                                       │
+ │                                                       ↓
+ └──── updated state ← audit ← iterate ← you playtest ───┘
 ```
-        ┌─────────────────────────────────────────────────────┐
-        │                                                     │
-   You ─┴─> ARCHITECT ──> 3 tasks ──> you pick ──> blueprint ─┐
-                                                              │
-                                                    handoff   │
-                                                    prompt    │
-                                                              ▼
-   You <── audit <── ARCHITECT <── you playtest <── EXECUTOR ─┘
-```
+
+That loop is the center of the framework. The rest of the repository exists to give it reliable context, tools, persistence, and reusable building blocks.
 
 ---
 
