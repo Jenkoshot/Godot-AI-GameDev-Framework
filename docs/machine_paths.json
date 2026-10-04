@@ -1,6 +1,15 @@
 {
   "_comment": "Per-machine Godot/Node executable paths. Keyed by hostname ($env:COMPUTERNAME on Windows, `hostname` on macOS/Linux). Read by CLAUDE.md Step 0 to resolve GODOT_PATH/node without relying on OS PATH. Safe to commit.",
   "machines": {
+    "mx2-Latitude-7430": {
+      "label": "mx2 Latitude 7430",
+      "os": "linux",
+      "godot_path": "/home/mx2/GODOT/Godot_v4.7.2-stable_linux.x86_64",
+      "godot_version": "4.7.2",
+      "godot_source": "manual",
+      "node_path": "/usr/bin/node",
+      "last_verified": "2026-10-03"
+    },
     "YOUR_COMPUTER_NAME_HERE": {
       "label": "My Dev Machine",
       "os": "windows",
